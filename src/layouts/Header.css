@@ -1,0 +1,107 @@
+.header {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-6);
+    gap: var(--space-4);
+}
+
+.header__left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.header__menu-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: var(--text-lg);
+    line-height: 1;
+}
+
+.header__menu-btn:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text);
+}
+
+.header__breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+.header__breadcrumb-current {
+    color: var(--color-text);
+    font-weight: var(--weight-medium);
+}
+
+.header__right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.header__search {
+    position: relative;
+}
+
+.header__search-input {
+    width: 220px;
+    padding-left: var(--space-8);
+    background: var(--color-surface-2);
+    border-color: transparent;
+    font-size: var(--text-sm);
+}
+
+.header__search-input:focus {
+    width: 280px;
+    border-color: var(--color-accent);
+}
+
+.header__search-icon {
+    position: absolute;
+    left: var(--space-3);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+    font-size: var(--text-sm);
+}
+
+.header__avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    background: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+    color: #fff;
+    cursor: pointer;
+    transition: box-shadow var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.header__avatar:hover {
+    box-shadow: var(--shadow-glow);
+}
+
+@media (max-width: 768px) {
+    .header__menu-btn {
+        display: flex;
+    }
+
+    .header__search {
+        display: none;
+    }
+}
