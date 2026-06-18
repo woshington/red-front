@@ -10,7 +10,7 @@ interface TurmaFormModalProps {
 }
 
 export function TurmaFormModal({ onClose, onSubmit, loading, initialData }: TurmaFormModalProps) {
-    const { data: professores, loading: professoresLoading, error: professoresError } = useGetProfessores();
+    const { data: professores } = useGetProfessores();
     const [formData, setFormData] = useState({
         name: "",
         teacher_id: "",
@@ -40,7 +40,7 @@ export function TurmaFormModal({ onClose, onSubmit, loading, initialData }: Turm
         return newErrors;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const newErrors = validateForm();
 
@@ -52,15 +52,16 @@ export function TurmaFormModal({ onClose, onSubmit, loading, initialData }: Turm
         onSubmit(formData);
     };
 
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const target = e.target as HTMLInputElement;
+        const { name, value, type, checked } = target;
         setFormData(prev => ({
             ...prev,
             [name]: type === "checkbox" ? checked : type === "number" ? Number(value) : value,
         }));
         // Limpar erro quando user começa a digitar
         if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: "" }));
+            setErrors((prev: any) => ({ ...prev, [name]: "" }));
         }
     };
 

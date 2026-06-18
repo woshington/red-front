@@ -123,7 +123,7 @@ export function Dashboard() {
                 marginBottom: "3rem",
             }}>
                 {metrics.map((metric, idx) => {
-                    const colorMap = {
+                    const colorMap: Record<number, any> = {
                         0: { primary: "#378ADD", light: "#E6F1FB", dark: "#185FA5", accent: "#5BA3F5" },
                         1: { primary: "#639922", light: "#EAF3DE", dark: "#3B6D11", accent: "#7CB835" },
                         2: { primary: "#BA7517", light: "#FAEEDA", dark: "#854F0B", accent: "#D4A04D" },
@@ -369,7 +369,7 @@ export function Dashboard() {
                                 padding: "12px 16px",
                             }}
                             labelStyle={{ color: "var(--color-text-primary)", fontWeight: 500 }}
-                            formatter={(value) => value.toLocaleString()}
+                            formatter={(value) => value?.toLocaleString()}
                         />
                         <Legend
                             wrapperStyle={{ paddingTop: "24px" }}

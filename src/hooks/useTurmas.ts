@@ -14,14 +14,14 @@ export function useCreateTurma() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const create = async (data) => {
+    const create = async (data: any) => {
         setLoading(true);
         setError(null);
 
         try {
             const response = await turmasService.create(data);
             return response;
-        } catch (err) {
+        } catch (err: any) {
             setError(err.message);
             throw err;
         } finally {
@@ -36,14 +36,14 @@ export function useUpdateTurma() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const update = async (id, data) => {
+    const update = async (id: number, data: any) => {
         setLoading(true);
         setError(null);
 
         try {
             const response = await turmasService.update(id, data);
             return response;
-        } catch (err) {
+        } catch (err: any) {
             setError(err.message);
             throw err;
         } finally {
@@ -58,13 +58,13 @@ export function useDeleteTurma() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const remove = async (id) => {
+    const remove = async (id: number) => {
         setLoading(true);
         setError(null);
 
         try {
             await turmasService.remove(id);
-        } catch (err) {
+        } catch (err: any) {
             setError(err.message);
             throw err;
         } finally {

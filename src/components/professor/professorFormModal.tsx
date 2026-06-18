@@ -52,7 +52,7 @@ export function ProfessorFormModal({ onClose, onSubmit, loading, initialData }: 
             [name]: type === "checkbox" ? checked : value,
         }));
         if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: "" }));
+            setErrors((prev: any) => ({ ...prev, [name]: "" }));
         }
     };
 

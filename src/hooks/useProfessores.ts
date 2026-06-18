@@ -12,14 +12,14 @@ export function useCreateProfessores() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const create = async (data) => {
+    const create = async (data: any) => {
         setLoading(true);
         setError(null);
 
         try {
             const response = await professoresService.create(data);
             return response;
-        } catch (err) {
+        } catch (err: any) {
             setError(err.message);
             throw err;
         } finally {
@@ -34,14 +34,14 @@ export function useUpdateProfessores() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const update = async (id, data) => {
+    const update = async (id: number, data: any) => {
         setLoading(true);
         setError(null);
 
         try {
             const response = await professoresService.update(id, data);
             return response;
-        } catch (err) {
+        } catch (err: any) {
             setError(err.message);
             throw err;
         } finally {
@@ -56,13 +56,13 @@ export function useDeleteProfessores() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const remove = async (id) => {
+    const remove = async (id: number) => {
         setLoading(true);
         setError(null);
 
         try {
             await professoresService.remove(id);
-        } catch (err) {
+        } catch (err: any) {
             setError(err.message);
             throw err;
         } finally {

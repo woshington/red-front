@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useCreateTurma, useTurmas, useUpdateTurma } from "../../hooks/useTurmas";
 import { TurmaFormModal } from "../../components/turma/turmaFormModal";
+import type { Turma } from "../../types";
 
 
 export function TurmasPage() {
@@ -13,7 +14,7 @@ export function TurmasPage() {
     const { update: updateTurma, loading: updatingTurma } = useUpdateTurma();
     const [editingTurma, setEditingTurma] = useState<any>(null);
 
-    const handleCreateOrUpdate = async (formData) => {
+    const handleCreateOrUpdate = async (formData: any) => {
         try {
             if (editingTurma) {
                 await updateTurma(editingTurma.id, formData);
@@ -28,7 +29,7 @@ export function TurmasPage() {
         }
     };
 
-    const handleToggleStatus = async (turma) => {
+    const handleToggleStatus = async (turma: Turma) => {
         try {
             const formData = {
                 name: turma.name,

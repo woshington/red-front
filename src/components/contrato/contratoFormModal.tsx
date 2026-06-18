@@ -112,7 +112,7 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
         }));
         
         if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: "" }));
+            setErrors((prev: any) => ({ ...prev, [name]: "" }));
         }
     };
 
@@ -124,9 +124,9 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
         }));
         
         // Limpa erro correspondente
-        if (name === "name" && errors.student_name) setErrors(prev => ({ ...prev, student_name: "" }));
-        if (name === "email" && errors.student_email) setErrors(prev => ({ ...prev, student_email: "" }));
-        if (name === "document_number" && errors.student_document) setErrors(prev => ({ ...prev, student_document: "" }));
+        if (name === "name" && errors.student_name) setErrors((prev: any) => ({ ...prev, student_name: "" }));
+        if (name === "email" && errors.student_email) setErrors((prev: any) => ({ ...prev, student_email: "" }));
+        if (name === "document_number" && errors.student_document) setErrors((prev: any) => ({ ...prev, student_document: "" }));
     };
 
     return (
@@ -184,7 +184,7 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
                                     value={studentId}
                                     onChange={(e) => {
                                         setStudentId(e.target.value);
-                                        if (errors.student_id) setErrors(prev => ({ ...prev, student_id: "" }));
+                                        if (errors.student_id) setErrors((prev: any) => ({ ...prev, student_id: "" }));
                                     }}
                                     disabled={loading || alunosLoading}
                                     style={errors.student_id ? { borderColor: "var(--color-error)" } : {}}

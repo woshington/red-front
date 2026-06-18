@@ -57,7 +57,7 @@ export function AlunoFormModal({ onClose, onSubmit, loading, initialData }: Alun
             [name]: type === "checkbox" ? checked : value,
         }));
         if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: "" }));
+            setErrors((prev: any) => ({ ...prev, [name]: "" }));
         }
     };
 
