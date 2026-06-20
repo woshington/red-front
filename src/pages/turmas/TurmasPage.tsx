@@ -1,15 +1,27 @@
 import { useState } from "react";
 import { useCreateTurma, useTurmas, useUpdateTurma } from "../../hooks/useTurmas";
 import { TurmaFormModal } from "../../components/turma/turmaFormModal";
+import { TurmaDetailsModal } from "../../components/turma/TurmaDetailsModal";
 import type { Turma } from "../../types";
 
 
 export function TurmasPage() {
     const [skip, setSkip] = useState(0);
-    const limit = 20;
-    const { data, loading, error, reload } = useTurmas({ skip, limit });
+    const [limit, setLimit] = useState(20);
+    const [searchName, setSearchName] = useState("");
+    const [statusFilter, setStatusFilter] = useState("");
+
+    const { data, loading, error, reload } = useTurmas({ 
+        skip, 
+        limit, 
+        name: searchName || undefined, 
+        is_active: statusFilter === "true" ? true : statusFilter === "false" ? false : undefined 
+    });
     const { create: createTurma, loading: creatingTurma } = useCreateTurma();
     const [showModal, setShowModal] = useState(false);
+    
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [selectedTurma, setSelectedTurma] = useState<Turma | null>(null);
 
     const { update: updateTurma, loading: updatingTurma } = useUpdateTurma();
     const [editingTurma, setEditingTurma] = useState<any>(null);
@@ -60,6 +72,33 @@ export function TurmasPage() {
                 </button>
             </div>
 
+            {/* Filtros */}
+            <div style={{
+                display: "flex", gap: "var(--space-3)", marginBottom: "var(--space-4)", flexWrap: "wrap"
+            }}>
+                <div style={{ flex: 1, minWidth: "200px" }}>
+                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)", display: "block" }}>Nome da Turma</label>
+                    <input 
+                        className="input" 
+                        placeholder="Buscar por nome..." 
+                        value={searchName} 
+                        onChange={(e) => setSearchName(e.target.value)} 
+                    />
+                </div>
+                <div style={{ flex: 1, minWidth: "150px", maxWidth: "250px" }}>
+                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)", display: "block" }}>Status</label>
+                    <select 
+                        className="input" 
+                        value={statusFilter} 
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                        <option value="">Todas</option>
+                        <option value="true">Ativas</option>
+                        <option value="false">Inativas</option>
+                    </select>
+                </div>
+            </div>
+
             {loading && <p className="text-muted">Carregando...</p>}
             {error && (
                 <div className="card" style={{ borderColor: "var(--color-error)" }}>
@@ -103,7 +142,7 @@ export function TurmasPage() {
                                         {turma.name}
                                     </td>
                                     <td style={{ padding: "var(--space-3) var(--space-4)", color: "var(--color-text-muted)" }}>
-                                        {turma.teacher.name}
+                                        {turma.teacher?.name || "Sem professor"}
                                     </td>
                                     <td style={{ padding: "var(--space-3) var(--space-4)", color: "var(--color-text-muted)" }}>
                                         {turma.year}
@@ -128,6 +167,16 @@ export function TurmasPage() {
                                     </td>
                                     <td style={{ padding: "var(--space-3) var(--space-4)" }}>
                                         <div style={{ display: "flex", gap: "var(--space-2)" }}>
+                                            <button
+                                                className="btn btn-ghost"
+                                                style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--text-xs)", color: "var(--color-primary)" }}
+                                                onClick={() => {
+                                                    setSelectedTurma(turma);
+                                                    setShowDetailsModal(true);
+                                                }}
+                                            >
+                                                Alunos
+                                            </button>
                                             <button
                                                 className="btn btn-ghost"
                                                 style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--text-xs)" }}
@@ -158,7 +207,20 @@ export function TurmasPage() {
                             {data.total} registro(s) encontrado(s) - Página {data.page} de {Math.ceil(data.total / data.size) || 1}
                         </p>
 
-                        <div style={{ display: "flex", gap: "var(--space-2)" }}>
+                        <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+                            <select 
+                                className="input" 
+                                style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--text-xs)", height: "auto" }}
+                                value={limit}
+                                onChange={(e) => {
+                                    setLimit(Number(e.target.value));
+                                    setSkip(0);
+                                }}
+                            >
+                                <option value={20}>20 por página</option>
+                                <option value={50}>50 por página</option>
+                                <option value={100}>100 por página</option>
+                            </select>
                             <button
                                 className="btn btn-ghost"
                                 disabled={data.page <= 1 || loading}
@@ -187,6 +249,14 @@ export function TurmasPage() {
                     onSubmit={handleCreateOrUpdate}
                     loading={creatingTurma || updatingTurma}
                     initialData={editingTurma}
+                />
+            )}
+            
+            {showDetailsModal && selectedTurma && (
+                <TurmaDetailsModal 
+                    turma={selectedTurma}
+                    onClose={() => setShowDetailsModal(false)}
+                    onUpdate={reload}
                 />
             )}
         </div>

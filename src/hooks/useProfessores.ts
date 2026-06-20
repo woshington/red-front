@@ -52,6 +52,27 @@ export function useUpdateProfessores() {
     return { update, loading, error };
 }
 
+export function useProfessorClasses() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const getClasses = async (id: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await professoresService.getClasses(id);
+            return data;
+        } catch (err: any) {
+            setError(err.message || "Erro ao carregar turmas");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { getClasses, loading, error };
+}
+
 export function useDeleteProfessores() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);

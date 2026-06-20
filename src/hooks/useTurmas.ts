@@ -3,7 +3,7 @@ import type { ListParams } from "../types";
 import { turmasService } from "../services/turmas";
 import { useState } from "react";
 
-export function useTurmas(params: ListParams = {}) {
+export function useTurmas(params: ListParams & { name?: string; is_active?: boolean } = {}) {
     return useFetch(
         () => turmasService.list(params),
         [JSON.stringify(params)]
@@ -36,7 +36,7 @@ export function useUpdateTurma() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const update = async (id: number, data: any) => {
+    const update = async (id: string, data: any) => {
         setLoading(true);
         setError(null);
 
@@ -58,7 +58,7 @@ export function useDeleteTurma() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const remove = async (id: number) => {
+    const remove = async (id: string) => {
         setLoading(true);
         setError(null);
 
@@ -73,4 +73,25 @@ export function useDeleteTurma() {
     };
 
     return { remove, loading, error };
+}
+
+export function useTransferStudents() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
+    const transfer = async (studentIds: string[], targetClassId: string | null) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await turmasService.transferStudents(studentIds, targetClassId);
+            return response;
+        } catch (err: any) {
+            setError(err.message);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { transfer, loading, error };
 }

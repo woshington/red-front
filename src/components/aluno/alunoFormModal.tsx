@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import type { Aluno } from "../../types";
+import type { Aluno, StudentLevel } from "../../types/aluno";
+import { STUDENT_LEVELS } from "../../types/aluno";
 
 interface AlunoFormModalProps {
     onClose: () => void;
@@ -8,38 +9,54 @@ interface AlunoFormModalProps {
     initialData?: Aluno | null;
 }
 
-export function AlunoFormModal({ onClose, onSubmit, loading, initialData }: AlunoFormModalProps) {
-    const [formData, setFormData] = useState({
+
+export function AlunoFormModal({
+    onClose,
+    onSubmit,
+    loading,
+    initialData,
+}: AlunoFormModalProps) {
+    const [formData, setFormData] = useState<{
+        name: string;
+        document: string;
+        phone: string;
+        level: StudentLevel;
+        active: boolean;
+    }>({
         name: "",
-        email: "",
-        document_number: "",
+        document: "",
         phone: "",
-        is_active: true,
+        level: "BEGINNER",
+        active: true,
     });
-    const [errors, setErrors] = useState<any>({});
+
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
         if (initialData) {
             setFormData({
-                name: initialData.name,
-                email: initialData.email,
-                document_number: initialData.document_number,
-                phone: initialData.phone,
-                is_active: initialData.is_active,
+                name: initialData.name ?? "",
+                document: initialData.document ?? "",
+                phone: initialData.phone ?? "",
+                level: (initialData.level as StudentLevel) ?? "BEGINNER",
+                active: initialData.active,
             });
         }
     }, [initialData]);
 
     const validateForm = () => {
-        const newErrors: any = {};
-        if (!formData.name.trim()) newErrors.name = "Nome é obrigatório";
-        if (!formData.email.trim()) newErrors.email = "E-mail é obrigatório";
-        if (!formData.document_number.trim()) newErrors.document_number = "CPF é obrigatório";
+        const newErrors: Record<string, string> = {};
+
+        if (!formData.name.trim()) {
+            newErrors.name = "Nome é obrigatório";
+        }
+
         return newErrors;
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
         const newErrors = validateForm();
 
         if (Object.keys(newErrors).length > 0) {
@@ -50,14 +67,25 @@ export function AlunoFormModal({ onClose, onSubmit, loading, initialData }: Alun
         onSubmit(formData);
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    ) => {
+        const { name, value } = e.target;
+
+        setFormData((prev) => ({
             ...prev,
-            [name]: type === "checkbox" ? checked : value,
+            [name]:
+                e.target instanceof HTMLInputElement &&
+                    e.target.type === "checkbox"
+                    ? e.target.checked
+                    : value,
         }));
+
         if (errors[name]) {
-            setErrors((prev: any) => ({ ...prev, [name]: "" }));
+            setErrors((prev) => ({
+                ...prev,
+                [name]: "",
+            }));
         }
     };
 
@@ -98,9 +126,16 @@ export function AlunoFormModal({ onClose, onSubmit, loading, initialData }: Alun
                         borderBottom: "1px solid var(--color-border)",
                     }}
                 >
-                    <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "var(--weight-semibold)" }}>
+                    <h3
+                        style={{
+                            margin: 0,
+                            fontSize: "18px",
+                            fontWeight: "var(--weight-semibold)",
+                        }}
+                    >
                         {initialData ? "Editar Aluno" : "Novo Aluno"}
                     </h3>
+
                     <button
                         type="button"
                         className="btn btn-ghost"
@@ -114,9 +149,16 @@ export function AlunoFormModal({ onClose, onSubmit, loading, initialData }: Alun
 
                 <form onSubmit={handleSubmit}>
                     <div style={{ marginBottom: "var(--space-4)" }}>
-                        <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>
+                        <label
+                            style={{
+                                display: "block",
+                                marginBottom: "var(--space-2)",
+                                fontWeight: "var(--weight-medium)",
+                            }}
+                        >
                             Nome *
                         </label>
+
                         <input
                             type="text"
                             name="name"
@@ -125,61 +167,76 @@ export function AlunoFormModal({ onClose, onSubmit, loading, initialData }: Alun
                             placeholder="Nome completo do aluno"
                             className="input"
                             disabled={loading}
-                            style={errors.name ? { borderColor: "var(--color-error)" } : {}}
+                            style={
+                                errors.name
+                                    ? { borderColor: "var(--color-error)" }
+                                    : {}
+                            }
                         />
-                        {errors.nome && (
-                            <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>
-                                {errors.nome}
+
+                        {errors.name && (
+                            <p
+                                style={{
+                                    color: "var(--color-error)",
+                                    fontSize: "var(--text-xs)",
+                                    marginTop: "var(--space-1)",
+                                }}
+                            >
+                                {errors.name}
                             </p>
                         )}
                     </div>
 
                     <div style={{ marginBottom: "var(--space-4)" }}>
-                        <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>
-                            E-mail *
+                        <label
+                            style={{
+                                display: "block",
+                                marginBottom: "var(--space-2)",
+                                fontWeight: "var(--weight-medium)",
+                            }}
+                        >
+                            CPF
                         </label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            placeholder="Email de contato"
-                            className="input"
-                            disabled={loading}
-                            style={errors.email ? { borderColor: "var(--color-error)" } : {}}
-                        />
-                        {errors.email && (
-                            <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>
-                                {errors.email}
-                            </p>
-                        )}
-                    </div>
 
-                    <div style={{ marginBottom: "var(--space-4)" }}>
-                        <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>
-                            CPF *
-                        </label>
                         <input
                             type="text"
-                            name="document_number"
-                            value={formData.document_number}
+                            name="document"
+                            value={formData.document}
                             onChange={handleChange}
                             placeholder="000.000.000-00"
                             className="input"
                             disabled={loading}
-                            style={errors.document_number ? { borderColor: "var(--color-error)" } : {}}
+                            style={
+                                errors.document
+                                    ? { borderColor: "var(--color-error)" }
+                                    : {}
+                            }
                         />
+
                         {errors.document_number && (
-                            <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>
+                            <p
+                                style={{
+                                    color: "var(--color-error)",
+                                    fontSize: "var(--text-xs)",
+                                    marginTop: "var(--space-1)",
+                                }}
+                            >
                                 {errors.document_number}
                             </p>
                         )}
                     </div>
 
                     <div style={{ marginBottom: "var(--space-4)" }}>
-                        <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>
+                        <label
+                            style={{
+                                display: "block",
+                                marginBottom: "var(--space-2)",
+                                fontWeight: "var(--weight-medium)",
+                            }}
+                        >
                             Telefone
                         </label>
+
                         <input
                             type="text"
                             name="phone"
@@ -191,22 +248,75 @@ export function AlunoFormModal({ onClose, onSubmit, loading, initialData }: Alun
                         />
                     </div>
 
-                    <div style={{ marginBottom: "var(--space-6)", display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+                    <div style={{ marginBottom: "var(--space-4)" }}>
+                        <label
+                            style={{
+                                display: "block",
+                                marginBottom: "var(--space-2)",
+                                fontWeight: "var(--weight-medium)",
+                            }}
+                        >
+                            Nível
+                        </label>
+
+                        <select
+                            name="level"
+                            value={formData.level}
+                            onChange={handleChange}
+                            className="input"
+                            disabled={loading}
+                        >
+                            {STUDENT_LEVELS.map((level) => (
+                                <option
+                                    key={level.value}
+                                    value={level.value}
+                                >
+                                    {level.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div
+                        style={{
+                            marginBottom: "var(--space-6)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "var(--space-2)",
+                        }}
+                    >
                         <input
                             type="checkbox"
                             id="ativo"
-                            name="is_active"
-                            checked={formData.is_active}
+                            name="active"
+                            checked={formData.active}
                             onChange={handleChange}
                             disabled={loading}
-                            style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                            style={{
+                                width: "18px",
+                                height: "18px",
+                                cursor: "pointer",
+                            }}
                         />
-                        <label htmlFor="ativo" style={{ cursor: "pointer", fontWeight: "var(--weight-medium)" }}>
+
+                        <label
+                            htmlFor="ativo"
+                            style={{
+                                cursor: "pointer",
+                                fontWeight: "var(--weight-medium)",
+                            }}
+                        >
                             Aluno Ativo
                         </label>
                     </div>
 
-                    <div style={{ display: "flex", gap: "var(--space-3)", justifyContent: "flex-end" }}>
+                    <div
+                        style={{
+                            display: "flex",
+                            gap: "var(--space-3)",
+                            justifyContent: "flex-end",
+                        }}
+                    >
                         <button
                             type="button"
                             className="btn btn-ghost"
@@ -215,12 +325,17 @@ export function AlunoFormModal({ onClose, onSubmit, loading, initialData }: Alun
                         >
                             Cancelar
                         </button>
+
                         <button
                             type="submit"
                             className="btn btn-primary"
                             disabled={loading}
                         >
-                            {loading ? "Salvando..." : initialData ? "Salvar Alterações" : "Cadastrar Aluno"}
+                            {loading
+                                ? "Salvando..."
+                                : initialData
+                                    ? "Salvar Alterações"
+                                    : "Cadastrar Aluno"}
                         </button>
                     </div>
                 </form>

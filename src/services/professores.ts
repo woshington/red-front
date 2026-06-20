@@ -13,4 +13,7 @@ export const professoresService = {
 
     remove: (id: number) =>
         api.delete<Professor>(`/teachers/${id}`),
+
+    getClasses: (id: string | number) =>
+        api.get<any[]>(`/teachers/${id}/classes`),
 };

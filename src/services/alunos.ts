@@ -1,4 +1,5 @@
-import type { ListParams, Paginated, Aluno } from "../types";
+import type { ListParams, Paginated } from "../types";
+import type { Aluno } from "../types/aluno";
 import { api, toQueryString } from "./api";
 
 export const alunosService = {
@@ -13,4 +14,10 @@ export const alunosService = {
 
     remove: (id: number) =>
         api.delete<Aluno>(`/students/${id}`),
+
+    markDefaulter: (id: number) =>
+        api.post<Aluno>(`/students/${id}/mark-defaulter`, {}),
+
+    removeDefaulter: (id: number) =>
+        api.post<Aluno>(`/students/${id}/remove-defaulter`, {}),
 };

@@ -1,4 +1,5 @@
 import { useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "./Header.css";
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -16,6 +17,7 @@ interface HeaderProps {
 
 export function Header({ onMenuClick }: HeaderProps) {
     const { pathname } = useLocation();
+    const { user, logout } = useAuth();
     const pageLabel = ROUTE_LABELS[pathname] ?? "Página";
 
     return (
@@ -41,7 +43,16 @@ export function Header({ onMenuClick }: HeaderProps) {
                         aria-label="Busca global"
                     />
                 </div>
-                <div className="header__avatar" title="Perfil">U</div>
+                <button 
+                    onClick={logout}
+                    className="btn btn-ghost" 
+                    style={{ marginLeft: "var(--space-4)", fontSize: "0.8rem", padding: "4px 8px" }}
+                >
+                    Sair
+                </button>
+                <div className="header__avatar" title="Perfil">
+                    {user?.role === "ADMIN" ? "A" : "U"}
+                </div>
             </div>
         </div>
     );

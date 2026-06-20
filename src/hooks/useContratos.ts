@@ -71,3 +71,66 @@ export function useDeleteContrato() {
 
     return { remove, loading, error };
 }
+
+export function usePauseContrato() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const pause = async (id: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await contratosService.pause(id);
+            return response;
+        } catch (err: any) {
+            setError(err.message || "Erro ao pausar contrato");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { pause, loading, error };
+}
+
+export function useReactivateContrato() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const reactivate = async (id: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await contratosService.reactivate(id);
+            return response;
+        } catch (err: any) {
+            setError(err.message || "Erro ao reativar contrato");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { reactivate, loading, error };
+}
+
+export function useCancelContrato() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const cancel = async (id: string, reason: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await contratosService.cancel(id, reason);
+            return response;
+        } catch (err: any) {
+            setError(err.message || "Erro ao cancelar contrato");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { cancel, loading, error };
+}

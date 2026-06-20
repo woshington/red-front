@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useGetProfessores, useCreateProfessores, useUpdateProfessores } from "../../hooks/useProfessores";
+import { useGetProfessores, useCreateProfessores, useUpdateProfessores, useProfessorClasses } from "../../hooks/useProfessores";
 import { ProfessorFormModal } from "../../components/professor/professorFormModal";
+import type { Turma } from "../../types";
 
 export function ProfessoresPage() {
     const [skip, setSkip] = useState(0);
@@ -11,6 +12,21 @@ export function ProfessoresPage() {
 
     const { update: updateProfessor, loading: updatingProfessor } = useUpdateProfessores();
     const [editingProfessor, setEditingProfessor] = useState<any>(null);
+
+    const { getClasses, loading: loadingClasses } = useProfessorClasses();
+    const [viewingClassesFor, setViewingClassesFor] = useState<any>(null);
+    const [professorClasses, setProfessorClasses] = useState<Turma[]>([]);
+
+    const handleViewClasses = async (professor: any) => {
+        setViewingClassesFor(professor);
+        try {
+            const classes = await getClasses(professor.id);
+            setProfessorClasses(classes);
+        } catch (err) {
+            console.error("Erro ao carregar turmas", err);
+            setProfessorClasses([]);
+        }
+    };
 
     const handleCreateOrUpdate = async (formData: any) => {
         try {
@@ -127,6 +143,13 @@ export function ProfessoresPage() {
                                             <button
                                                 className="btn btn-ghost"
                                                 style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--text-xs)" }}
+                                                onClick={() => handleViewClasses(professor)}
+                                            >
+                                                Turmas
+                                            </button>
+                                            <button
+                                                className="btn btn-ghost"
+                                                style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--text-xs)" }}
                                                 onClick={() => handleToggleStatus(professor)}
                                                 disabled={updatingProfessor}
                                             >
@@ -144,7 +167,20 @@ export function ProfessoresPage() {
                             {data.total} registro(s) encontrado(s) - Página {data.page} de {Math.ceil(data.total / data.size) || 1}
                         </p>
 
-                        <div style={{ display: "flex", gap: "var(--space-2)" }}>
+                        <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+                            <select 
+                                className="input" 
+                                style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--text-xs)", height: "auto" }}
+                                value={limit}
+                                onChange={(e) => {
+                                    setLimit(Number(e.target.value));
+                                    setSkip(0);
+                                }}
+                            >
+                                <option value={20}>20 por página</option>
+                                <option value={50}>50 por página</option>
+                                <option value={100}>100 por página</option>
+                            </select>
                             <button
                                 className="btn btn-ghost"
                                 disabled={data.page <= 1 || loading}
@@ -174,6 +210,50 @@ export function ProfessoresPage() {
                     loading={creatingProfessor || updatingProfessor}
                     initialData={editingProfessor}
                 />
+            )}
+
+            {viewingClassesFor && (
+                <div style={{
+                    position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: "rgba(0,0,0,0.5)", display: "flex",
+                    alignItems: "center", justifyContent: "center", zIndex: 1000
+                }}>
+                    <div className="card" style={{ width: "100%", maxWidth: "600px", padding: "var(--space-6)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-6)" }}>
+                            <h2 style={{ margin: 0, fontSize: "20px" }}>
+                                Turmas de {viewingClassesFor.name}
+                            </h2>
+                            <button onClick={() => setViewingClassesFor(null)} className="btn btn-ghost" style={{ padding: "var(--space-2)" }}>✕</button>
+                        </div>
+                        
+                        {loadingClasses ? (
+                            <p className="text-muted">Carregando turmas...</p>
+                        ) : professorClasses.length > 0 ? (
+                            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+                                {professorClasses.map((turma) => (
+                                    <li key={turma.id} style={{ 
+                                        padding: "var(--space-3)", 
+                                        border: "1px solid var(--color-border)", 
+                                        borderRadius: "var(--border-radius-md)" 
+                                    }}>
+                                        <div style={{ fontWeight: "var(--weight-medium)" }}>{turma.name}</div>
+                                        <div style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)" }}>
+                                            Ano: {turma.year} | {turma.is_active ? "Ativa" : "Inativa"}
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-muted">Nenhuma turma atribuída a este professor.</p>
+                        )}
+                        
+                        <div style={{ marginTop: "var(--space-4)", display: "flex", justifyContent: "flex-end" }}>
+                            <button className="btn btn-primary" onClick={() => setViewingClassesFor(null)}>
+                                Fechar
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

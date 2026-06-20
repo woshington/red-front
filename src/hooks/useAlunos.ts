@@ -71,3 +71,43 @@ export function useDeleteAluno() {
 
     return { remove, loading, error };
 }
+
+export function useMarkDefaulter() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const markDefaulter = async (id: number) => {
+        setLoading(true);
+        setError(null);
+        try {
+            await alunosService.markDefaulter(id);
+        } catch (err: any) {
+            setError(err.message || "Erro ao negativar aluno");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { markDefaulter, loading, error };
+}
+
+export function useRemoveDefaulter() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const removeDefaulter = async (id: number) => {
+        setLoading(true);
+        setError(null);
+        try {
+            await alunosService.removeDefaulter(id);
+        } catch (err: any) {
+            setError(err.message || "Erro ao remover negativação do aluno");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { removeDefaulter, loading, error };
+}

@@ -1,21 +1,71 @@
 import { useState } from "react";
-import { useAlunos, useCreateAluno } from "../../hooks/useAlunos";
+import { useAlunos, useCreateAluno, useUpdateAluno, useMarkDefaulter, useRemoveDefaulter } from "../../hooks/useAlunos";
 import { AlunoFormModal } from "../../components/aluno/alunoFormModal";
+import { STUDENT_LEVELS } from "../../types/aluno";
+import type { Aluno } from "../../types/aluno";
 
 export function AlunosPage() {
     const [skip, setSkip] = useState(0);
-    const limit = 10;
-    const { data, loading, error, reload } = useAlunos({ skip, limit });
+    const [limit, setLimit] = useState(20);
+    const [statusFilter, setStatusFilter] = useState("");
+    const [defaulterFilter, setDefaulterFilter] = useState("");
+    
+    const { data, loading, error, reload } = useAlunos({ 
+        skip, 
+        limit,
+        active: statusFilter === "true" ? true : statusFilter === "false" ? false : undefined,
+        defaulter: defaulterFilter === "true" ? true : defaulterFilter === "false" ? false : undefined,
+    });
     const { create: createAluno, loading: creatingAluno } = useCreateAluno();
+    const { update: updateAluno, loading: updatingAluno } = useUpdateAluno();
+    const { markDefaulter, loading: markingDefaulter } = useMarkDefaulter();
+    const { removeDefaulter, loading: removingDefaulter } = useRemoveDefaulter();
     const [showModal, setShowModal] = useState(false);
+    const [editingAluno, setEditingAluno] = useState<Aluno | null>(null);
 
-    const handleCreateAluno = async (formData: any) => {
+    const handleCreateOrUpdateAluno = async (formData: any) => {
         try {
-            await createAluno(formData);
+            if (editingAluno) {
+                await updateAluno(editingAluno.id, formData);
+            } else {
+                await createAluno(formData);
+            }
             setShowModal(false);
+            setEditingAluno(null);
             reload();
         } catch (err) {
-            console.error("Erro ao criar aluno:", err);
+            console.error("Erro ao salvar aluno:", err);
+        }
+    };
+
+    const handleEditClick = (aluno: Aluno) => {
+        setEditingAluno(aluno);
+        setShowModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setEditingAluno(null);
+    };
+
+    const handleToggleDefaulter = async (aluno: Aluno) => {
+        const isDefaulter = !!aluno.defaulter_date;
+        const msg = isDefaulter 
+            ? `Tem certeza que deseja remover a negativação de ${aluno.name}?`
+            : `Tem certeza que deseja marcar ${aluno.name} como negativado?`;
+            
+        if (!window.confirm(msg)) return;
+
+        try {
+            if (isDefaulter) {
+                await removeDefaulter(aluno.id);
+            } else {
+                await markDefaulter(aluno.id);
+            }
+            reload();
+        } catch (err) {
+            console.error("Erro ao alterar situação de negativação:", err);
+            alert("Erro na operação.");
         }
     };
 
@@ -29,6 +79,36 @@ export function AlunosPage() {
                 >
                     + Novo Aluno
                 </button>
+            </div>
+
+            {/* Filtros */}
+            <div style={{
+                display: "flex", gap: "var(--space-3)", marginBottom: "var(--space-4)", flexWrap: "wrap"
+            }}>
+                <div style={{ flex: 1, minWidth: "150px" }}>
+                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)", display: "block" }}>Status</label>
+                    <select 
+                        className="input" 
+                        value={statusFilter} 
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                        <option value="">Todos</option>
+                        <option value="true">Ativos</option>
+                        <option value="false">Inativos</option>
+                    </select>
+                </div>
+                <div style={{ flex: 1, minWidth: "150px" }}>
+                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)", display: "block" }}>Inadimplência</label>
+                    <select 
+                        className="input" 
+                        value={defaulterFilter} 
+                        onChange={(e) => setDefaulterFilter(e.target.value)}
+                    >
+                        <option value="">Todos</option>
+                        <option value="true">Negativados</option>
+                        <option value="false">Regular</option>
+                    </select>
+                </div>
             </div>
 
             {loading && <p className="text-muted">Carregando...</p>}
@@ -46,9 +126,9 @@ export function AlunosPage() {
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
                             <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                                {["Nome", "E-mail", "CPF", "Telefone", "Status"].map((h) => (
+                                {["Nome", "CPF", "Telefone", "Nível", "Status", ""].map((h, i) => (
                                     <th
-                                        key={h}
+                                        key={h || i}
                                         style={{
                                             textAlign: "left",
                                             padding: "var(--space-3) var(--space-4)",
@@ -64,7 +144,7 @@ export function AlunosPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {data.items.map((aluno) => (
+                            {data.items?.map((aluno) => (
                                 <tr
                                     key={aluno.id}
                                     style={{ borderBottom: "1px solid var(--color-border)" }}
@@ -73,25 +153,58 @@ export function AlunosPage() {
                                         {aluno.name}
                                     </td>
                                     <td style={{ padding: "var(--space-3) var(--space-4)", color: "var(--color-text-muted)" }}>
-                                        {aluno.email}
-                                    </td>
-                                    <td style={{ padding: "var(--space-3) var(--space-4)", color: "var(--color-text-muted)" }}>
-                                        {aluno.document_number}
+                                        {aluno.document}
                                     </td>
                                     <td style={{ padding: "var(--space-3) var(--space-4)", color: "var(--color-text-muted)" }}>
                                         {aluno.phone || "-"}
+                                    </td>
+                                    <td style={{ padding: "var(--space-3) var(--space-4)", color: "var(--color-text-muted)" }}>
+                                        {
+                                            STUDENT_LEVELS.find(level => level.value === aluno.level)?.label ?? "-"
+                                        }
                                     </td>
                                     <td style={{ padding: "var(--space-3) var(--space-4)" }}>
                                         <span
                                             className="badge"
                                             style={
-                                                aluno.is_active
+                                                aluno.active
                                                     ? {}
                                                     : { background: "rgba(248,113,113,0.15)", color: "var(--color-error)" }
                                             }
                                         >
-                                            {aluno.is_active ? "Ativo" : "Inativo"}
+                                            {aluno.active ? "Ativo" : "Inativo"}
                                         </span>
+                                        {aluno.defaulter_date && (
+                                            <span
+                                                className="badge"
+                                                style={{ background: "rgba(248,113,113,0.15)", color: "var(--color-error)", marginLeft: "var(--space-2)" }}
+                                            >
+                                                Negativado
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td style={{ padding: "var(--space-3) var(--space-4)", textAlign: "right" }}>
+                                        <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "flex-end" }}>
+                                            <button 
+                                                className="btn btn-ghost" 
+                                                style={{ fontSize: "var(--text-xs)", padding: "var(--space-2) var(--space-3)" }}
+                                                onClick={() => handleEditClick(aluno)}
+                                            >
+                                                Editar
+                                            </button>
+                                            <button 
+                                                className="btn btn-ghost" 
+                                                style={{ 
+                                                    fontSize: "var(--text-xs)", 
+                                                    padding: "var(--space-2) var(--space-3)",
+                                                    color: aluno.defaulter_date ? "var(--color-success)" : "var(--color-error)"
+                                                }}
+                                                onClick={() => handleToggleDefaulter(aluno)}
+                                                disabled={markingDefaulter || removingDefaulter}
+                                            >
+                                                {aluno.defaulter_date ? "Limpar Nome" : "Negativar"}
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -103,7 +216,20 @@ export function AlunosPage() {
                             {data.total} registro(s) encontrado(s) - Página {data.page} de {Math.ceil(data.total / data.size) || 1}
                         </p>
 
-                        <div style={{ display: "flex", gap: "var(--space-2)" }}>
+                        <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+                            <select 
+                                className="input" 
+                                style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--text-xs)", height: "auto" }}
+                                value={limit}
+                                onChange={(e) => {
+                                    setLimit(Number(e.target.value));
+                                    setSkip(0);
+                                }}
+                            >
+                                <option value={20}>20 por página</option>
+                                <option value={50}>50 por página</option>
+                                <option value={100}>100 por página</option>
+                            </select>
                             <button
                                 className="btn btn-ghost"
                                 disabled={data.page <= 1 || loading}
@@ -125,9 +251,10 @@ export function AlunosPage() {
 
             {showModal && (
                 <AlunoFormModal
-                    onClose={() => setShowModal(false)}
-                    onSubmit={handleCreateAluno}
-                    loading={creatingAluno}
+                    onClose={handleCloseModal}
+                    onSubmit={handleCreateOrUpdateAluno}
+                    loading={creatingAluno || updatingAluno}
+                    initialData={editingAluno}
                 />
             )}
         </div>

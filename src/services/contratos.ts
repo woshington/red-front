@@ -13,4 +13,13 @@ export const contratosService = {
 
     remove: (id: string) =>
         api.delete<Contrato>(`/contracts/${id}`),
+
+    pause: (id: string) =>
+        api.put<Contrato>(`/contracts/${id}/pause`, {}),
+
+    reactivate: (id: string) =>
+        api.put<Contrato>(`/contracts/${id}/reactivate`, {}),
+
+    cancel: (id: string, reason: string) =>
+        api.put<Contrato>(`/contracts/${id}/cancel`, { reason }),
 };

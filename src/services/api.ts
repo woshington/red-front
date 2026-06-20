@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
@@ -20,7 +20,7 @@ async function request<T>(
 
     const url = `${API_BASE_URL}${path}`;
 
-    const res = await fetch(url, {
+    let res = await fetch(url, {
         method,
         headers: {
             "Content-Type": "application/json",
@@ -28,6 +28,46 @@ async function request<T>(
         },
         body: payload !== undefined ? JSON.stringify(payload) : undefined,
     });
+
+    if (res.status === 401) {
+        const refreshToken = localStorage.getItem("refresh_token");
+        if (refreshToken) {
+            try {
+                const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ refresh_token: refreshToken })
+                });
+
+                if (refreshRes.ok) {
+                    const data = await refreshRes.json();
+                    localStorage.setItem("token", data.access_token);
+                    localStorage.setItem("refresh_token", data.refresh_token);
+
+                    // Retry original request
+                    res = await fetch(url, {
+                        method,
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${data.access_token}`
+                        },
+                        body: payload !== undefined ? JSON.stringify(payload) : undefined,
+                    });
+                } else {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("refresh_token");
+                    window.dispatchEvent(new Event("auth:unauthorized"));
+                }
+            } catch (error) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("refresh_token");
+                window.dispatchEvent(new Event("auth:unauthorized"));
+            }
+        } else {
+            localStorage.removeItem("token");
+            window.dispatchEvent(new Event("auth:unauthorized"));
+        }
+    }
 
     if (!res.ok) {
         throw new ApiError(`Erro ${res.status}: ${res.statusText}`, res.status)

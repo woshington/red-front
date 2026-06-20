@@ -10,9 +10,9 @@ interface ContratoFormModalProps {
 
 export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormModalProps) {
     const { data: alunosData, loading: alunosLoading } = useAlunos({ size: 1000, active_only: true });
-    
+
     const [studentMode, setStudentMode] = useState<"existing" | "new">("existing");
-    
+
     // Contrato fields
     const [formData, setFormData] = useState({
         monthly_fee: "",
@@ -40,11 +40,11 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
 
     const validateForm = () => {
         const newErrors: any = {};
-        
+
         if (studentMode === "existing" && !studentId) {
             newErrors.student_id = "Selecione um aluno";
         }
-        
+
         if (studentMode === "new") {
             if (!newStudent.name.trim()) newErrors.student_name = "Nome do aluno é obrigatório";
             if (!newStudent.email.trim()) newErrors.student_email = "E-mail do aluno é obrigatório";
@@ -56,7 +56,7 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
             newErrors.payment_day = "Dia de vencimento deve ser entre 1 e 31";
         }
         if (!formData.start_date) newErrors.start_date = "Data de início é obrigatória";
-        
+
         if (formData.plan_type === "CUSTOM" && !formData.total_months) {
             newErrors.total_months = "Total de meses é obrigatório para plano customizado";
         }
@@ -73,30 +73,57 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
             return;
         }
 
-        const payload: any = {
-            monthly_fee: Number(formData.monthly_fee),
-            payment_day: Number(formData.payment_day),
-            start_date: formData.start_date,
-            plan_type: formData.plan_type,
-            payment_method: formData.payment_method,
-            generate_payments: formData.generate_payments,
-        };
-
+        let totalMonths = 1;
         if (formData.plan_type === "CUSTOM" && formData.total_months) {
-            payload.total_months = Number(formData.total_months);
+            totalMonths = Number(formData.total_months);
         } else if (formData.plan_type === "SEMESTERLY") {
-            payload.total_months = 6;
+            totalMonths = 6;
         } else if (formData.plan_type === "YEARLY") {
-            payload.total_months = 12;
+            totalMonths = 12;
         }
 
-        if (formData.signed_at) payload.signed_at = formData.signed_at;
-        if (formData.notes) payload.notes = formData.notes;
+        const [sYear, sMonth, sDay] = formData.start_date.split("-").map(Number);
+        
+        // Calculate end_date
+        let eMonth = sMonth + totalMonths;
+        let eYear = sYear + Math.floor((eMonth - 1) / 12);
+        eMonth = ((eMonth - 1) % 12) + 1;
+        
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        const end_date = `${eYear}-${pad(eMonth)}-${pad(sDay)}`;
+
+        // Calculate first_due_date
+        let fYear = sYear;
+        let fMonth = sMonth;
+        const fDay = Number(formData.payment_day);
+        
+        if (fDay < sDay) {
+            fMonth += 1;
+            if (fMonth > 12) {
+                fMonth = 1;
+                fYear += 1;
+            }
+        }
+        const first_due_date = `${fYear}-${pad(fMonth)}-${pad(fDay)}`;
+
+        const payload: any = {
+            start_date: formData.start_date,
+            end_date: end_date,
+            total_value: Number(formData.monthly_fee) * totalMonths,
+            payment_type: "MONTHLY",
+            first_due_date: first_due_date,
+        };
 
         if (studentMode === "existing") {
             payload.student_id = studentId;
         } else {
-            payload.student_data = newStudent;
+            payload.student = {
+                name: newStudent.name,
+                email: newStudent.email,
+                document: newStudent.document_number,
+                phone: newStudent.phone,
+                level: "BEGINNER"
+            };
         }
 
         onSubmit(payload);
@@ -105,12 +132,12 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
     const handleContractChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target as HTMLInputElement;
         const checked = type === "checkbox" ? (e.target as HTMLInputElement).checked : undefined;
-        
+
         setFormData(prev => ({
             ...prev,
             [name]: type === "checkbox" ? checked : value,
         }));
-        
+
         if (errors[name]) {
             setErrors((prev: any) => ({ ...prev, [name]: "" }));
         }
@@ -122,7 +149,7 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
             ...prev,
             [name]: value,
         }));
-        
+
         // Limpa erro correspondente
         if (name === "name" && errors.student_name) setErrors((prev: any) => ({ ...prev, student_name: "" }));
         if (name === "email" && errors.student_email) setErrors((prev: any) => ({ ...prev, student_email: "" }));
@@ -158,19 +185,19 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
                     <div style={{ marginBottom: "var(--space-5)" }}>
                         <div style={{ display: "flex", gap: "var(--space-4)", marginBottom: "var(--space-3)" }}>
                             <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", cursor: "pointer" }}>
-                                <input 
-                                    type="radio" 
-                                    checked={studentMode === "existing"} 
-                                    onChange={() => setStudentMode("existing")} 
+                                <input
+                                    type="radio"
+                                    checked={studentMode === "existing"}
+                                    onChange={() => setStudentMode("existing")}
                                     disabled={loading}
                                 />
                                 <span style={{ fontWeight: "var(--weight-medium)" }}>Aluno Existente</span>
                             </label>
                             <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", cursor: "pointer" }}>
-                                <input 
-                                    type="radio" 
-                                    checked={studentMode === "new"} 
-                                    onChange={() => setStudentMode("new")} 
+                                <input
+                                    type="radio"
+                                    checked={studentMode === "new"}
+                                    onChange={() => setStudentMode("new")}
                                     disabled={loading}
                                 />
                                 <span style={{ fontWeight: "var(--weight-medium)" }}>Novo Aluno</span>
@@ -190,8 +217,8 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
                                     style={errors.student_id ? { borderColor: "var(--color-error)" } : {}}
                                 >
                                     <option value="">Selecione o aluno...</option>
-                                    {alunosData?.items.map(a => (
-                                        <option key={a.id} value={a.id}>{a.name} ({a.document_number})</option>
+                                    {alunosData?.items?.map(a => (
+                                        <option key={a.id} value={a.id}>{a.name} ({a.document})</option>
                                     ))}
                                 </select>
                                 {errors.student_id && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.student_id}</p>}
@@ -223,7 +250,7 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
 
                     {/* DADOS DO CONTRATO */}
                     <h4 style={{ marginBottom: "var(--space-3)", fontSize: "16px", fontWeight: "var(--weight-semibold)", borderBottom: "1px solid var(--color-border)", paddingBottom: "var(--space-2)" }}>Detalhes do Contrato</h4>
-                    
+
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)", marginBottom: "var(--space-4)" }}>
                         <div>
                             <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Mensalidade (R$) *</label>

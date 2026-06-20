@@ -1,3 +1,5 @@
+import type { Aluno } from "./aluno";
+
 export interface Curso {
     id: number;
     nome: string;
@@ -16,7 +18,7 @@ export interface Professor {
 }
 
 export interface Turma {
-    id: number;
+    id: string;
     name: string;
     teacher: Professor;
     year: number;
@@ -25,16 +27,6 @@ export interface Turma {
     is_active: boolean;
 }
 
-export interface Aluno {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-    document_number: string;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
-}
 
 export type StatusPagamento = "pendente" | "pago" | "cancelado" | "atrasado";
 
