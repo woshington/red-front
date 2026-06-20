@@ -4,17 +4,22 @@ import { ContratoFormModal } from "../../components/contrato/contratoFormModal";
 import { ContratoDetailsModal } from "../../components/contrato/ContratoDetailsModal";
 
 export function ContratosPage() {
+    const params = new URLSearchParams(window.location.search);
     const [skip, setSkip] = useState(0);
     const [studentName, setStudentName] = useState("");
     const [studentDocument, setStudentDocument] = useState("");
-    const [statusFilter, setStatusFilter] = useState("");
+    const [statusFilter, setStatusFilter] = useState(params.get("status") || "");
+    const [startDate, setStartDate] = useState(params.get("start_date") || "");
+    const [endDate, setEndDate] = useState(params.get("end_date") || "");
     const [limit, setLimit] = useState(20);
     const { data, loading, error, reload } = useContratos({ 
         skip, 
         limit, 
         student_name: studentName, 
         student_document: studentDocument,
-        status: statusFilter || undefined
+        status: statusFilter || undefined,
+        start_date: startDate || undefined,
+        end_date: endDate || undefined
     });
     const { create: createContrato, loading: creatingContrato } = useCreateContrato();
     const { pause: pauseContrato, loading: pausingContrato } = usePauseContrato();

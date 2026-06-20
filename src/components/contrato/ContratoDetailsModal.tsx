@@ -7,7 +7,7 @@ interface ContratoDetailsModalProps {
 }
 
 export function ContratoDetailsModal({ contrato, onClose }: ContratoDetailsModalProps) {
-    const { data, loading, error, reload } = useInstallments({ contract_id: contrato.id, size: 100 });
+    const { data, loading, error, reload } = useInstallments({ contract_id: contrato.id, limit: 100 });
     const { markPaid, loading: markingPaid } = useMarkInstallmentPaid();
 
     const handleMarkPaid = async (installmentId: string, value: number) => {

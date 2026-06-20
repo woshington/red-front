@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useDashboard } from '../hooks/useDashboard';
 
 export function Dashboard() {
+    const navigate = useNavigate();
     const { user } = useAuth();
     const today = new Date();
     const [month, setMonth] = useState(today.getMonth() + 1);
@@ -39,42 +40,51 @@ export function Dashboard() {
         return `R$ ${Number(val || 0).toFixed(2).replace('.', ',')}`;
     };
 
+    const startOfMonth = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endOfMonth = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
+
     const metrics = [
         {
             label: "Matrículas Ativas",
             value: data?.effective_enrollments?.toLocaleString() || "0",
             icon: "ti-users",
-            positive: true
+            positive: true,
+            path: "/alunos?status=true"
         },
         {
             label: "Cancelamentos no Mês",
             value: data?.cancellations?.toLocaleString() || "0",
             icon: "ti-alert-triangle",
-            positive: false
+            positive: false,
+            path: `/contratos?status=CANCELED&start_date=${startOfMonth}&end_date=${endOfMonth}`
         },
         {
             label: "Receita do Mês",
             value: formatCurrency(data?.month_revenue),
             icon: "ti-cash",
-            positive: true
+            positive: true,
+            path: `/pagamentos?status=PAID&date_type=payment_date&start_date=${startOfMonth}&end_date=${endOfMonth}`
         },
         {
             label: "Previsão (Mês)",
             value: formatCurrency(data?.month_forecast),
             icon: "ti-chart-bar",
-            positive: true
+            positive: true,
+            path: `/pagamentos?status=PENDING&date_type=due_date&start_date=${startOfMonth}&end_date=${endOfMonth}`
         },
         {
             label: "Valor Inadimplente",
             value: formatCurrency(data?.total_default_amount),
             icon: "ti-credit-card",
-            positive: false
+            positive: false,
+            path: `/pagamentos?status=OVERDUE&date_type=due_date&end_date=${endOfMonth}`
         },
         {
             label: "Alunos Negativados",
             value: data?.defaulter_students?.toLocaleString() || "0",
             icon: "ti-alert-circle",
-            positive: false
+            positive: false,
+            path: "/alunos?defaulter=true"
         },
     ];
 
@@ -137,6 +147,7 @@ export function Dashboard() {
                     return (
                         <div
                             key={metric.label}
+                            onClick={() => metric.path && navigate(metric.path)}
                             style={{
                                 background: "var(--color-background-primary)",
                                 border: "1.5px solid #f0f0f0",
@@ -145,6 +156,16 @@ export function Dashboard() {
                                 position: "relative",
                                 overflow: "hidden",
                                 boxShadow: "0 2px 8px rgba(0, 0, 0, 0.06)",
+                                cursor: "pointer",
+                                transition: "transform 0.2s, box-shadow 0.2s"
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.06)';
                             }}
                         >
                             <div style={{ position: "relative", zIndex: 2 }}>

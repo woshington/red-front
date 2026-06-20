@@ -18,14 +18,14 @@ interface UseInstallmentsProps {
 export function useInstallments({ skip = 0, limit = 50, status, student_id, contract_id, start_date, end_date, date_type }: UseInstallmentsProps = {}) {
     return useFetch(
         () => {
-            let qs = `?skip=${skip}&limit=${limit}`;
-            if (status) qs += `&status=${status}`;
-            if (student_id) qs += `&student_id=${student_id}`;
-            if (contract_id) qs += `&contract_id=${contract_id}`;
-            if (start_date) qs += `&start_date=${start_date}`;
-            if (end_date) qs += `&end_date=${end_date}`;
-            if (date_type) qs += `&date_type=${date_type}`;
-            return installmentsService.list(qs);
+            const params: any = { skip, limit };
+            if (status) params.status = status;
+            if (student_id) params.student_id = student_id;
+            if (contract_id) params.contract_id = contract_id;
+            if (start_date) params.start_date = start_date;
+            if (end_date) params.end_date = end_date;
+            if (date_type) params.date_type = date_type;
+            return installmentsService.list(params);
         },
         [skip, limit, status, student_id, contract_id, start_date, end_date, date_type]
     );

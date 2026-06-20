@@ -5,10 +5,11 @@ import { STUDENT_LEVELS } from "../../types/aluno";
 import type { Aluno } from "../../types/aluno";
 
 export function AlunosPage() {
+    const params = new URLSearchParams(window.location.search);
     const [skip, setSkip] = useState(0);
     const [limit, setLimit] = useState(20);
-    const [statusFilter, setStatusFilter] = useState("");
-    const [defaulterFilter, setDefaulterFilter] = useState("");
+    const [statusFilter, setStatusFilter] = useState(params.get("status") || "");
+    const [defaulterFilter, setDefaulterFilter] = useState(params.get("defaulter") || "");
     
     const { data, loading, error, reload } = useAlunos({ 
         skip, 

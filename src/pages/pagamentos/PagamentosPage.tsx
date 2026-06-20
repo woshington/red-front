@@ -2,14 +2,15 @@ import { useState } from "react";
 import { useInstallments, useMarkInstallmentPaid } from "../../hooks/useInstallments";
 
 export function PagamentosPage() {
+    const params = new URLSearchParams(window.location.search);
     const [skip, setSkip] = useState(0);
     const [limit, setLimit] = useState(20);
-    const [dateType, setDateType] = useState("due_date");
+    const [dateType, setDateType] = useState(params.get("date_type") || "due_date");
     
     // Filtros
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
-    const [statusFilter, setStatusFilter] = useState("");
+    const [startDate, setStartDate] = useState(params.get("start_date") || "");
+    const [endDate, setEndDate] = useState(params.get("end_date") || "");
+    const [statusFilter, setStatusFilter] = useState(params.get("status") || "");
 
     const { data, loading, error, reload } = useInstallments({ 
         skip, 
