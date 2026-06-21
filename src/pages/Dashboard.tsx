@@ -53,7 +53,7 @@ export function Dashboard() {
         },
         {
             label: "Cancelamentos no Mês",
-            value: data?.overdue_payments_count?.toLocaleString() || "0",
+            value: data?.cancellations?.toLocaleString() || "0",
             icon: "ti-alert-triangle",
             positive: false,
             path: `/contratos?status=CANCELED&start_date=${startOfMonth}&end_date=${endOfMonth}`
