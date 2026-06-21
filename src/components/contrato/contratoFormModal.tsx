@@ -15,11 +15,11 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
 
     // Contrato fields
     const [formData, setFormData] = useState({
-        monthly_fee: "",
+        total_value: "",
+        installment_value: "",
+        installment_count: "1",
         payment_day: 10,
         start_date: new Date().toISOString().split("T")[0],
-        plan_type: "MONTHLY" as PlanType,
-        total_months: "",
         signed_at: new Date().toISOString().split("T")[0],
         payment_method: "CASH" as PaymentMethod,
         generate_payments: false,
@@ -51,15 +51,14 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
             if (!newStudent.document_number.trim()) newErrors.student_document = "CPF é obrigatório";
         }
 
-        if (!formData.monthly_fee) newErrors.monthly_fee = "Mensalidade é obrigatória";
+        if (!formData.total_value || Number(formData.total_value) <= 0) newErrors.total_value = "Valor total é obrigatório";
+        if (!formData.installment_value || Number(formData.installment_value) <= 0) newErrors.installment_value = "Valor da parcela é obrigatório";
+        if (!formData.installment_count || Number(formData.installment_count) < 1) newErrors.installment_count = "Quantidade de parcelas é obrigatória";
+
         if (!formData.payment_day || formData.payment_day < 1 || formData.payment_day > 31) {
             newErrors.payment_day = "Dia de vencimento deve ser entre 1 e 31";
         }
         if (!formData.start_date) newErrors.start_date = "Data de início é obrigatória";
-
-        if (formData.plan_type === "CUSTOM" && !formData.total_months) {
-            newErrors.total_months = "Total de meses é obrigatório para plano customizado";
-        }
 
         return newErrors;
     };
@@ -73,43 +72,35 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
             return;
         }
 
-        let totalMonths = 1;
-        if (formData.plan_type === "CUSTOM" && formData.total_months) {
-            totalMonths = Number(formData.total_months);
-        } else if (formData.plan_type === "SEMESTERLY") {
-            totalMonths = 6;
-        } else if (formData.plan_type === "YEARLY") {
-            totalMonths = 12;
-        }
+        const totalMonths = Number(formData.installment_count) || 1;
 
         const [sYear, sMonth, sDay] = formData.start_date.split("-").map(Number);
         
-        // Calculate end_date
-        let eMonth = sMonth + totalMonths;
-        let eYear = sYear + Math.floor((eMonth - 1) / 12);
-        eMonth = ((eMonth - 1) % 12) + 1;
-        
         const pad = (n: number) => n.toString().padStart(2, "0");
-        const end_date = `${eYear}-${pad(eMonth)}-${pad(sDay)}`;
+
+        // Calculate end_date
+        let endObj = new Date(sYear, sMonth - 1 + totalMonths, sDay);
+        if (endObj.getMonth() !== ((sMonth - 1 + totalMonths) % 12)) {
+            endObj = new Date(sYear, sMonth - 1 + totalMonths + 1, 0);
+        }
+        const end_date = `${endObj.getFullYear()}-${pad(endObj.getMonth() + 1)}-${pad(endObj.getDate())}`;
 
         // Calculate first_due_date
-        let fYear = sYear;
-        let fMonth = sMonth;
+        let fMonthIndex = sMonth - 1;
         const fDay = Number(formData.payment_day);
-        
         if (fDay < sDay) {
-            fMonth += 1;
-            if (fMonth > 12) {
-                fMonth = 1;
-                fYear += 1;
-            }
+            fMonthIndex += 1;
         }
-        const first_due_date = `${fYear}-${pad(fMonth)}-${pad(fDay)}`;
+        let firstDueObj = new Date(sYear, fMonthIndex, fDay);
+        if (firstDueObj.getMonth() !== (fMonthIndex % 12)) {
+            firstDueObj = new Date(sYear, fMonthIndex + 1, 0);
+        }
+        const first_due_date = `${firstDueObj.getFullYear()}-${pad(firstDueObj.getMonth() + 1)}-${pad(firstDueObj.getDate())}`;
 
         const payload: any = {
             start_date: formData.start_date,
             end_date: end_date,
-            total_value: Number(formData.monthly_fee) * totalMonths,
+            total_value: Number(formData.total_value),
             payment_type: "MONTHLY",
             first_due_date: first_due_date,
         };
@@ -133,10 +124,26 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
         const { name, value, type } = e.target as HTMLInputElement;
         const checked = type === "checkbox" ? (e.target as HTMLInputElement).checked : undefined;
 
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === "checkbox" ? checked : value,
-        }));
+        setFormData(prev => {
+            const next = { ...prev, [name]: type === "checkbox" ? checked : value };
+            
+            // Lógica para sincronizar valores
+            if (name === 'total_value') {
+                const count = Number(next.installment_count) || 1;
+                const total = Number(value) || 0;
+                next.installment_value = (total / count).toFixed(2);
+            } else if (name === 'installment_value') {
+                const count = Number(next.installment_count) || 1;
+                const inst = Number(value) || 0;
+                next.total_value = (inst * count).toFixed(2);
+            } else if (name === 'installment_count') {
+                const count = Number(value) || 1;
+                const inst = Number(next.installment_value) || 0;
+                next.total_value = (inst * count).toFixed(2);
+            }
+
+            return next as any;
+        });
 
         if (errors[name]) {
             setErrors((prev: any) => ({ ...prev, [name]: "" }));
@@ -251,33 +258,29 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
                     {/* DADOS DO CONTRATO */}
                     <h4 style={{ marginBottom: "var(--space-3)", fontSize: "16px", fontWeight: "var(--weight-semibold)", borderBottom: "1px solid var(--color-border)", paddingBottom: "var(--space-2)" }}>Detalhes do Contrato</h4>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)", marginBottom: "var(--space-4)" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "var(--space-4)", marginBottom: "var(--space-4)" }}>
                         <div>
-                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Mensalidade (R$) *</label>
-                            <input type="number" step="0.01" name="monthly_fee" className="input" value={formData.monthly_fee} onChange={handleContractChange} disabled={loading} style={errors.monthly_fee ? { borderColor: "var(--color-error)" } : {}} />
-                            {errors.monthly_fee && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.monthly_fee}</p>}
+                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Valor da Parcela (R$) *</label>
+                            <input type="number" step="0.01" name="installment_value" className="input" value={formData.installment_value} onChange={handleContractChange} disabled={loading} style={errors.installment_value ? { borderColor: "var(--color-error)" } : {}} />
+                            {errors.installment_value && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.installment_value}</p>}
                         </div>
                         <div>
-                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Dia de Vencimento *</label>
-                            <input type="number" min="1" max="31" name="payment_day" className="input" value={formData.payment_day} onChange={handleContractChange} disabled={loading} style={errors.payment_day ? { borderColor: "var(--color-error)" } : {}} />
-                            {errors.payment_day && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.payment_day}</p>}
+                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Qtd. de Parcelas *</label>
+                            <input type="number" min="1" name="installment_count" className="input" value={formData.installment_count} onChange={handleContractChange} disabled={loading} style={errors.installment_count ? { borderColor: "var(--color-error)" } : {}} />
+                            {errors.installment_count && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.installment_count}</p>}
+                        </div>
+                        <div>
+                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Valor Total (R$) *</label>
+                            <input type="number" step="0.01" name="total_value" className="input" value={formData.total_value} onChange={handleContractChange} disabled={loading} style={errors.total_value ? { borderColor: "var(--color-error)" } : {}} />
+                            {errors.total_value && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.total_value}</p>}
                         </div>
                     </div>
 
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)", marginBottom: "var(--space-4)" }}>
                         <div>
-                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Tipo de Plano *</label>
-                            <select name="plan_type" className="input" value={formData.plan_type} onChange={handleContractChange} disabled={loading}>
-                                <option value="MONTHLY">Mensal</option>
-                                <option value="SEMESTERLY">Semestral</option>
-                                <option value="YEARLY">Anual</option>
-                                <option value="CUSTOM">Personalizado (Custom)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Meses (se Customizado)</label>
-                            <input type="number" min="1" name="total_months" className="input" value={formData.total_months} onChange={handleContractChange} disabled={loading || formData.plan_type !== "CUSTOM"} style={errors.total_months ? { borderColor: "var(--color-error)" } : {}} />
-                            {errors.total_months && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.total_months}</p>}
+                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Dia de Vencimento *</label>
+                            <input type="number" min="1" max="31" name="payment_day" className="input" value={formData.payment_day} onChange={handleContractChange} disabled={loading} style={errors.payment_day ? { borderColor: "var(--color-error)" } : {}} />
+                            {errors.payment_day && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.payment_day}</p>}
                         </div>
                     </div>
 
