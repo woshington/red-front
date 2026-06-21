@@ -62,6 +62,7 @@ export interface ListParams {
 
 export interface DashboardSummary {
     total_active_students: number;
+    effective_enrollments: number;
     total_active_contracts: number;
     total_active_courses: number;
     revenue_by_level: { level: string; revenue: number }[];

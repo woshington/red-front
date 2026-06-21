@@ -46,7 +46,7 @@ export function Dashboard() {
     const metrics = [
         {
             label: "Matrículas Ativas",
-            value: data?.total_active_contracts?.toLocaleString() || "0",
+            value: data?.effective_enrollments?.toLocaleString() || "0",
             icon: "ti-users",
             positive: true,
             path: "/alunos?status=true"
