@@ -9,13 +9,13 @@ export function ContratosPage() {
     const [studentName, setStudentName] = useState("");
     const [studentDocument, setStudentDocument] = useState("");
     const [statusFilter, setStatusFilter] = useState(params.get("status") || "");
-    const [startDate, setStartDate] = useState(params.get("start_date") || "");
-    const [endDate, setEndDate] = useState(params.get("end_date") || "");
+    const [startDate] = useState(params.get("start_date") || "");
+    const [endDate] = useState(params.get("end_date") || "");
     const [limit, setLimit] = useState(20);
-    const { data, loading, error, reload } = useContratos({ 
-        skip, 
-        limit, 
-        student_name: studentName, 
+    const { data, loading, error, reload } = useContratos({
+        skip,
+        limit,
+        student_name: studentName,
         student_document: studentDocument,
         status: statusFilter || undefined,
         start_date: startDate || undefined,
@@ -61,7 +61,7 @@ export function ContratosPage() {
     const handleCancel = async (contrato: any) => {
         const reason = prompt("Motivo do cancelamento:");
         if (!reason) return;
-        
+
         try {
             await cancelContrato(contrato.id, reason);
             reload();
@@ -89,27 +89,27 @@ export function ContratosPage() {
             }}>
                 <div style={{ flex: 1, minWidth: "200px" }}>
                     <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)", display: "block" }}>Nome do Aluno</label>
-                    <input 
-                        className="input" 
-                        placeholder="Buscar por nome..." 
-                        value={studentName} 
-                        onChange={(e) => setStudentName(e.target.value)} 
+                    <input
+                        className="input"
+                        placeholder="Buscar por nome..."
+                        value={studentName}
+                        onChange={(e) => setStudentName(e.target.value)}
                     />
                 </div>
                 <div style={{ flex: 1, minWidth: "200px" }}>
                     <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)", display: "block" }}>Documento</label>
-                    <input 
-                        className="input" 
-                        placeholder="CPF ou RG" 
-                        value={studentDocument} 
-                        onChange={(e) => setStudentDocument(e.target.value)} 
+                    <input
+                        className="input"
+                        placeholder="CPF ou RG"
+                        value={studentDocument}
+                        onChange={(e) => setStudentDocument(e.target.value)}
                     />
                 </div>
                 <div style={{ flex: 1, minWidth: "150px" }}>
                     <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)", display: "block" }}>Status</label>
-                    <select 
-                        className="input" 
-                        value={statusFilter} 
+                    <select
+                        className="input"
+                        value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                     >
                         <option value="">Todos</option>
@@ -183,8 +183,8 @@ export function ContratosPage() {
                                     </td>
                                     <td style={{ padding: "var(--space-3) var(--space-4)", textAlign: "right" }}>
                                         <div style={{ display: "flex", gap: "var(--space-2)", justifyContent: "flex-end" }}>
-                                            <button 
-                                                className="btn btn-ghost" 
+                                            <button
+                                                className="btn btn-ghost"
                                                 style={{ fontSize: "var(--text-xs)", padding: "var(--space-1) var(--space-2)" }}
                                                 onClick={() => setSelectedContrato(contrato)}
                                             >
@@ -192,16 +192,16 @@ export function ContratosPage() {
                                             </button>
                                             {contrato.status !== "CANCELED" && (
                                                 <>
-                                                    <button 
-                                                        className="btn btn-ghost" 
+                                                    <button
+                                                        className="btn btn-ghost"
                                                         style={{ fontSize: "var(--text-xs)", padding: "var(--space-1) var(--space-2)" }}
                                                         onClick={() => handleTogglePause(contrato)}
                                                         disabled={pausingContrato || reactivatingContrato}
                                                     >
                                                         {contrato.status === "ACTIVE" ? "Pausar" : "Retomar"}
                                                     </button>
-                                                    <button 
-                                                        className="btn btn-ghost" 
+                                                    <button
+                                                        className="btn btn-ghost"
                                                         style={{ fontSize: "var(--text-xs)", padding: "var(--space-1) var(--space-2)", color: "var(--color-error)", borderColor: "rgba(248,113,113,0.3)" }}
                                                         onClick={() => handleCancel(contrato)}
                                                         disabled={cancelingContrato}
@@ -223,8 +223,8 @@ export function ContratosPage() {
                         </p>
 
                         <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
-                            <select 
-                                className="input" 
+                            <select
+                                className="input"
                                 style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--text-xs)", height: "auto" }}
                                 value={limit}
                                 onChange={(e) => {

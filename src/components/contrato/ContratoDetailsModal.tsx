@@ -1,4 +1,3 @@
-import React from "react";
 import { useInstallments, useMarkInstallmentPaid } from "../../hooks/useInstallments";
 
 interface ContratoDetailsModalProps {

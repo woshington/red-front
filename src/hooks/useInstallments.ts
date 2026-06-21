@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { installmentsService } from "../services/installments";
 import { useFetch } from "./useFetch";
-import type { ListParams } from "../types";
 
 
 interface UseInstallmentsProps {

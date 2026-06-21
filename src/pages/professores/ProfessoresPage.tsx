@@ -5,7 +5,7 @@ import type { Turma } from "../../types";
 
 export function ProfessoresPage() {
     const [skip, setSkip] = useState(0);
-    const limit = 10;
+    const [limit, setLimit] = useState(10);
     const { data, loading, error, reload } = useGetProfessores({ skip, limit, active_only: false });
     const { create: createProfessor, loading: creatingProfessor } = useCreateProfessores();
     const [showModal, setShowModal] = useState(false);

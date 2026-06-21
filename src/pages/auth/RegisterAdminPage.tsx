@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 export const RegisterAdminPage: React.FC = () => {
   const { registerAdmin } = useAuth();
-  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,7 +34,7 @@ export const RegisterAdminPage: React.FC = () => {
     <div style={styles.container}>
       <div style={styles.glowBlob1} />
       <div style={styles.glowBlob2} />
-      
+
       <div className="card" style={styles.card}>
         <div style={styles.header}>
           <h1 style={{ marginBottom: "var(--space-2)" }}>Admin Setup</h1>

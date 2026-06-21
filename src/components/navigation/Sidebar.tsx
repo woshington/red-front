@@ -2,16 +2,6 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Sidebar.css';
 
-const NAV_ITEMS = [
-    { path: '/', label: 'Dashboard', icon: '📊' },
-    // { path: '/cursos', label: 'Cursos', icon: '📖' },
-    { path: '/turmas', label: 'Turmas', icon: '🎓' },
-    { path: '/alunos', label: 'Alunos', icon: '🧑‍🎓' },
-    { path: '/professores', label: 'Professores', icon: '👨‍🏫' },
-    { path: '/contratos', label: 'Contratos', icon: '📝' },
-    { path: '/pagamentos', label: 'Pagamentos', icon: '💳' },
-];
-
 interface SidebarProps {
     collapsed: boolean;
     onToggle: () => void;
@@ -19,7 +9,7 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     const { user } = useAuth();
-    
+
     return (
         <div className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''}`}>
             <div className="sidebar__brand">

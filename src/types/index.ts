@@ -64,6 +64,9 @@ export interface DashboardSummary {
     total_active_students: number;
     total_active_contracts: number;
     total_active_courses: number;
+    revenue_by_level: { level: string; revenue: number }[];
+    contract_status_chart: { status: string; count: number }[];
+
     total_classes: number;
     monthly_expected_revenue: number;
     current_month_received: number;

@@ -46,42 +46,42 @@ export function Dashboard() {
     const metrics = [
         {
             label: "Matrículas Ativas",
-            value: data?.effective_enrollments?.toLocaleString() || "0",
+            value: data?.total_active_contracts?.toLocaleString() || "0",
             icon: "ti-users",
             positive: true,
             path: "/alunos?status=true"
         },
         {
             label: "Cancelamentos no Mês",
-            value: data?.cancellations?.toLocaleString() || "0",
+            value: data?.overdue_payments_count?.toLocaleString() || "0",
             icon: "ti-alert-triangle",
             positive: false,
             path: `/contratos?status=CANCELED&start_date=${startOfMonth}&end_date=${endOfMonth}`
         },
         {
             label: "Receita do Mês",
-            value: formatCurrency(data?.month_revenue),
+            value: formatCurrency(data?.current_month_received),
             icon: "ti-cash",
             positive: true,
             path: `/pagamentos?status=PAID&date_type=payment_date&start_date=${startOfMonth}&end_date=${endOfMonth}`
         },
         {
             label: "Previsão (Mês)",
-            value: formatCurrency(data?.month_forecast),
+            value: formatCurrency(data?.monthly_expected_revenue),
             icon: "ti-chart-bar",
             positive: true,
             path: `/pagamentos?status=PENDING&date_type=due_date&start_date=${startOfMonth}&end_date=${endOfMonth}`
         },
         {
             label: "Valor Inadimplente",
-            value: formatCurrency(data?.total_default_amount),
+            value: formatCurrency(data?.overdue_total),
             icon: "ti-credit-card",
             positive: false,
             path: `/pagamentos?status=OVERDUE&date_type=due_date&end_date=${endOfMonth}`
         },
         {
             label: "Alunos Negativados",
-            value: data?.defaulter_students?.toLocaleString() || "0",
+            value: data?.blacklisted_count?.toLocaleString() || "0",
             icon: "ti-alert-circle",
             positive: false,
             path: "/alunos?defaulter=true"
@@ -192,7 +192,7 @@ export function Dashboard() {
 
             {/* Gráficos Estratégicos */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
-                
+
                 {/* Status dos Contratos */}
                 <div style={{
                     background: "var(--color-background-primary)",
@@ -236,9 +236,9 @@ export function Dashboard() {
                                 outerRadius={100}
                                 fill="#8884d8"
                                 dataKey="value"
-                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                             >
-                                {revenueByLevel.map((entry: any, index: number) => (
+                                {revenueByLevel.map((_entry: any, index: number) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
