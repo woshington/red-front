@@ -151,7 +151,7 @@ export function PagamentosPage() {
                                                 </p>
                                             </td>
                                             <td style={{ padding: "var(--space-3) var(--space-4)", color: "var(--color-text-muted)" }}>
-                                                {new Date(inst.due_date).toLocaleDateString('pt-BR')}
+                                                {inst.due_date ? inst.due_date.split('T')[0].split('-').reverse().join('/') : ''}
                                             </td>
                                             <td style={{ padding: "var(--space-3) var(--space-4)", color: "var(--color-text-muted)" }}>
                                                 R$ {Number(inst.value).toFixed(2).replace('.', ',')}

@@ -65,7 +65,7 @@ export function ContratoDetailsModal({ contrato, onClose }: ContratoDetailsModal
                         </div>
                         <div>
                             <p style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)" }}>Período</p>
-                            <p>{new Date(contrato.start_date).toLocaleDateString('pt-BR')} até {new Date(contrato.end_date).toLocaleDateString('pt-BR')}</p>
+                            <p>{contrato.start_date ? contrato.start_date.split('T')[0].split('-').reverse().join('/') : ''} até {contrato.end_date ? contrato.end_date.split('T')[0].split('-').reverse().join('/') : ''}</p>
                         </div>
                     </div>
                 </div>
@@ -93,7 +93,7 @@ export function ContratoDetailsModal({ contrato, onClose }: ContratoDetailsModal
                             {data?.items?.map((inst) => (
                                 <tr key={inst.id} style={{ borderBottom: "1px solid var(--color-border)" }}>
                                     <td style={{ padding: "var(--space-2)" }}>{inst.installment_number}</td>
-                                    <td style={{ padding: "var(--space-2)" }}>{new Date(inst.due_date).toLocaleDateString('pt-BR')}</td>
+                                    <td style={{ padding: "var(--space-2)" }}>{inst.due_date ? inst.due_date.split('T')[0].split('-').reverse().join('/') : ''}</td>
                                     <td style={{ padding: "var(--space-2)" }}>R$ {Number(inst.value).toFixed(2).replace('.', ',')}</td>
                                     <td style={{ padding: "var(--space-2)" }}>
                                         <span className="badge" style={{ 

@@ -168,7 +168,7 @@ export function ContratosPage() {
                                         {contrato.payment_type}
                                     </td>
                                     <td style={{ padding: "var(--space-3) var(--space-4)", color: "var(--color-text-muted)" }}>
-                                        {new Date(contrato.start_date).toLocaleDateString('pt-BR')}
+                                        {contrato.start_date ? contrato.start_date.split('T')[0].split('-').reverse().join('/') : ''}
                                     </td>
                                     <td style={{ padding: "var(--space-3) var(--space-4)" }}>
                                         <span
