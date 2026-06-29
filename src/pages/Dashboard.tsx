@@ -114,12 +114,12 @@ export function Dashboard() {
                 </div>
                 <div style={{ display: "flex", gap: "var(--space-2)" }}>
                     <select className="input" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-                        {Array.from({ length: 12 }).map((_, i) => (
-                            <option key={i + 1} value={i + 1}>Mês {i + 1}</option>
+                        {["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((name, i) => (
+                            <option key={i + 1} value={i + 1}>{name}</option>
                         ))}
                     </select>
                     <select className="input" value={year} onChange={(e) => setYear(Number(e.target.value))}>
-                        {[year - 1, year, year + 1].map(y => (
+                        {Array.from({ length: 5 }, (_, i) => today.getFullYear() - 2 + i).map(y => (
                             <option key={y} value={y}>{y}</option>
                         ))}
                     </select>

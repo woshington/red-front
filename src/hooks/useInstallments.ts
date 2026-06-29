@@ -51,3 +51,45 @@ export function useMarkInstallmentPaid() {
 
     return { markPaid, loading, error };
 }
+
+export function useCreateInstallment() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const create = async (data: { contract_id: string; value: number; due_date: string }) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await installmentsService.create(data);
+            return response;
+        } catch (err: any) {
+            setError(err.message || "Erro ao criar parcela");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { create, loading, error };
+}
+
+export function useCancelInstallment() {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const cancel = async (id: string) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await installmentsService.cancel(id);
+            return response;
+        } catch (err: any) {
+            setError(err.message || "Erro ao cancelar parcela");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { cancel, loading, error };
+}

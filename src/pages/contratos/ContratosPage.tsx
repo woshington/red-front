@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useContratos, useCreateContrato, usePauseContrato, useReactivateContrato, useCancelContrato } from "../../hooks/useContratos";
+import { installmentsService } from "../../services/installments";
 import { ContratoFormModal } from "../../components/contrato/contratoFormModal";
 import { ContratoDetailsModal } from "../../components/contrato/ContratoDetailsModal";
 
@@ -9,6 +10,7 @@ export function ContratosPage() {
     const [studentName, setStudentName] = useState("");
     const [studentDocument, setStudentDocument] = useState("");
     const [statusFilter, setStatusFilter] = useState(params.get("status") || "");
+    const [lessonsPerWeekFilter, setLessonsPerWeekFilter] = useState("");
     const [startDate] = useState(params.get("start_date") || "");
     const [endDate] = useState(params.get("end_date") || "");
     const [limit, setLimit] = useState(20);
@@ -19,7 +21,8 @@ export function ContratosPage() {
         student_document: studentDocument,
         status: statusFilter || undefined,
         start_date: startDate || undefined,
-        end_date: endDate || undefined
+        end_date: endDate || undefined,
+        lessons_per_week: lessonsPerWeekFilter ? Number(lessonsPerWeekFilter) : undefined,
     });
     const { create: createContrato, loading: creatingContrato } = useCreateContrato();
     const { pause: pauseContrato, loading: pausingContrato } = usePauseContrato();
@@ -28,6 +31,12 @@ export function ContratosPage() {
 
     const [showModal, setShowModal] = useState(false);
     const [selectedContrato, setSelectedContrato] = useState<any | null>(null);
+
+    // Pause modal state
+    const [pauseTarget, setPauseTarget] = useState<any | null>(null);
+    const [expectedReturnDate, setExpectedReturnDate] = useState("");
+    const [pauseError, setPauseError] = useState("");
+    const [pauseLoading, setPauseLoading] = useState(false);
 
     const handleCreateContrato = async (formData: any) => {
         try {
@@ -40,21 +49,46 @@ export function ContratosPage() {
         }
     };
 
-    const handleTogglePause = async (contrato: any) => {
-        const isPaused = contrato.status === "PAUSED";
-        const msg = isPaused ? "Tem certeza que deseja retomar este contrato?" : "Tem certeza que deseja pausar este contrato?";
-        if (!window.confirm(msg)) return;
+    const handleOpenPause = (contrato: any) => {
+        setExpectedReturnDate("");
+        setPauseError("");
+        setPauseTarget(contrato);
+    };
 
+    const handleConfirmPause = async () => {
+        if (!expectedReturnDate) {
+            setPauseError("Informe a data prevista de retorno.");
+            return;
+        }
+        setPauseLoading(true);
         try {
-            if (contrato.status === "ACTIVE") {
-                await pauseContrato(contrato.id);
-            } else if (contrato.status === "PAUSED") {
-                await reactivateContrato(contrato.id);
-            }
+            await pauseContrato(pauseTarget.id, { expected_return_date: expectedReturnDate });
+
+            // Cancel all pending/overdue installments for this contract
+            const instData = await installmentsService.list({ contract_id: pauseTarget.id, limit: 200 });
+            const toCancelIds = instData.items
+                .filter((i: any) => i.status === "PENDING" || i.status === "OVERDUE")
+                .map((i: any) => i.id);
+            await Promise.allSettled(toCancelIds.map((id: string) => installmentsService.cancel(id)));
+
+            setPauseTarget(null);
             reload();
         } catch (err) {
-            console.error("Erro ao pausar/reativar contrato:", err);
-            alert("Erro na operação.");
+            console.error("Erro ao pausar contrato:", err);
+            setPauseError("Erro ao pausar contrato. Tente novamente.");
+        } finally {
+            setPauseLoading(false);
+        }
+    };
+
+    const handleReactivate = async (contrato: any) => {
+        if (!window.confirm("Tem certeza que deseja retomar este contrato?")) return;
+        try {
+            await reactivateContrato(contrato.id);
+            reload();
+        } catch (err) {
+            console.error("Erro ao reativar contrato:", err);
+            alert("Erro ao reativar contrato.");
         }
     };
 
@@ -118,6 +152,19 @@ export function ContratosPage() {
                         <option value="CANCELED">Cancelado</option>
                     </select>
                 </div>
+                <div style={{ flex: "0 0 140px" }}>
+                    <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)", display: "block" }}>Aulas/Semana</label>
+                    <select
+                        className="input"
+                        value={lessonsPerWeekFilter}
+                        onChange={(e) => setLessonsPerWeekFilter(e.target.value)}
+                    >
+                        <option value="">Todas</option>
+                        {[1, 2, 3, 4, 5, 6, 7].map(n => (
+                            <option key={n} value={n}>{n}x/semana</option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
             {loading && <p className="text-muted">Carregando...</p>}
@@ -135,7 +182,7 @@ export function ContratosPage() {
                     <table style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
                             <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                                {["Aluno", "Valor Total", "Tipo Pagto", "Início", "Status", "Ações"].map((h) => (
+                                {["Aluno", "Valor Total", "Aulas/Sem.", "Início", "Status", "Ações"].map((h) => (
                                     <th
                                         key={h}
                                         style={{
@@ -165,7 +212,7 @@ export function ContratosPage() {
                                         R$ {Number(contrato.total_value).toFixed(2).replace('.', ',')}
                                     </td>
                                     <td style={{ padding: "var(--space-3) var(--space-4)", color: "var(--color-text-muted)" }}>
-                                        {contrato.payment_type}
+                                        {contrato.lessons_per_week ? `${contrato.lessons_per_week}x/sem.` : "—"}
                                     </td>
                                     <td style={{ padding: "var(--space-3) var(--space-4)", color: "var(--color-text-muted)" }}>
                                         {contrato.start_date ? contrato.start_date.split('T')[0].split('-').reverse().join('/') : ''}
@@ -192,14 +239,25 @@ export function ContratosPage() {
                                             </button>
                                             {contrato.status !== "CANCELED" && (
                                                 <>
-                                                    <button
-                                                        className="btn btn-ghost"
-                                                        style={{ fontSize: "var(--text-xs)", padding: "var(--space-1) var(--space-2)" }}
-                                                        onClick={() => handleTogglePause(contrato)}
-                                                        disabled={pausingContrato || reactivatingContrato}
-                                                    >
-                                                        {contrato.status === "ACTIVE" ? "Pausar" : "Retomar"}
-                                                    </button>
+                                                    {contrato.status === "ACTIVE" ? (
+                                                        <button
+                                                            className="btn btn-ghost"
+                                                            style={{ fontSize: "var(--text-xs)", padding: "var(--space-1) var(--space-2)" }}
+                                                            onClick={() => handleOpenPause(contrato)}
+                                                            disabled={pausingContrato}
+                                                        >
+                                                            Pausar
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            className="btn btn-ghost"
+                                                            style={{ fontSize: "var(--text-xs)", padding: "var(--space-1) var(--space-2)" }}
+                                                            onClick={() => handleReactivate(contrato)}
+                                                            disabled={reactivatingContrato}
+                                                        >
+                                                            Retomar
+                                                        </button>
+                                                    )}
                                                     <button
                                                         className="btn btn-ghost"
                                                         style={{ fontSize: "var(--text-xs)", padding: "var(--space-1) var(--space-2)", color: "var(--color-error)", borderColor: "rgba(248,113,113,0.3)" }}
@@ -268,6 +326,64 @@ export function ContratosPage() {
                     contrato={selectedContrato}
                     onClose={() => setSelectedContrato(null)}
                 />
+            )}
+
+            {/* Pause Modal */}
+            {pauseTarget && (
+                <div
+                    style={{
+                        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+                        background: "rgba(0,0,0,0.5)", zIndex: 999,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                    }}
+                    onClick={() => setPauseTarget(null)}
+                >
+                    <div
+                        className="card"
+                        style={{ width: "100%", maxWidth: "440px", zIndex: 1000 }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 style={{ margin: "0 0 var(--space-4)", fontSize: "18px", fontWeight: "var(--weight-semibold)" }}>
+                            Pausar Contrato
+                        </h3>
+                        <p style={{ color: "var(--color-text-secondary)", marginBottom: "var(--space-4)", fontSize: "14px" }}>
+                            Aluno: <strong>{pauseTarget.student?.name}</strong>
+                        </p>
+                        <div style={{
+                            background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.4)",
+                            borderRadius: "var(--border-radius)", padding: "var(--space-3)",
+                            marginBottom: "var(--space-4)", fontSize: "13px", color: "var(--color-text-secondary)"
+                        }}>
+                            Ao pausar, todas as cobranças futuras pendentes serão canceladas.
+                        </div>
+                        <div style={{ marginBottom: "var(--space-4)" }}>
+                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>
+                                Data prevista de retorno *
+                            </label>
+                            <input
+                                type="date"
+                                className="input"
+                                value={expectedReturnDate}
+                                onChange={(e) => { setExpectedReturnDate(e.target.value); setPauseError(""); }}
+                                min={new Date().toISOString().split("T")[0]}
+                            />
+                            {pauseError && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{pauseError}</p>}
+                        </div>
+                        <div style={{ display: "flex", gap: "var(--space-3)", justifyContent: "flex-end" }}>
+                            <button className="btn btn-ghost" onClick={() => setPauseTarget(null)} disabled={pauseLoading}>
+                                Cancelar
+                            </button>
+                            <button
+                                className="btn btn-primary"
+                                onClick={handleConfirmPause}
+                                disabled={pauseLoading}
+                                style={{ background: "var(--color-warning, #f59e0b)" }}
+                            >
+                                {pauseLoading ? "Pausando..." : "Confirmar Pausa"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

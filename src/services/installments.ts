@@ -19,6 +19,9 @@ export const installmentsService = {
     markPaid: (id: string, data: { paid_value: number; paid_at: string; payment_method: string }) =>
         api.put<Installment>(`/installments/${id}/mark-paid`, data),
 
+    create: (data: { contract_id: string; value: number; due_date: string }) =>
+        api.post<Installment>(`/installments`, data),
+
     cancel: (id: string) =>
         api.post<Installment>(`/installments/${id}/cancel`, {}),
 };

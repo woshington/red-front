@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAlunos } from "../../hooks/useAlunos";
-import type { PlanType, PaymentMethod } from "../../types";
+import type { PaymentMethod } from "../../types";
 
 interface ContratoFormModalProps {
     onClose: () => void;
@@ -19,6 +19,7 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
         installment_value: "",
         installment_count: "1",
         payment_day: 10,
+        lessons_per_week: "2",
         start_date: new Date().toISOString().split("T")[0],
         signed_at: new Date().toISOString().split("T")[0],
         payment_method: "CASH" as PaymentMethod,
@@ -103,6 +104,7 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
             total_value: Number(formData.total_value),
             payment_type: "MONTHLY",
             first_due_date: first_due_date,
+            lessons_per_week: Number(formData.lessons_per_week) || 1,
         };
 
         if (studentMode === "existing") {
@@ -276,11 +278,30 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
                         </div>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)", marginBottom: "var(--space-4)" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "var(--space-4)", marginBottom: "var(--space-4)" }}>
                         <div>
                             <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Dia de Vencimento *</label>
                             <input type="number" min="1" max="31" name="payment_day" className="input" value={formData.payment_day} onChange={handleContractChange} disabled={loading} style={errors.payment_day ? { borderColor: "var(--color-error)" } : {}} />
                             {errors.payment_day && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.payment_day}</p>}
+                        </div>
+                        <div>
+                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Aulas por Semana *</label>
+                            <input type="number" min="1" max="7" name="lessons_per_week" className="input" value={formData.lessons_per_week} onChange={handleContractChange} disabled={loading} />
+                        </div>
+                        <div>
+                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>1º Vencimento</label>
+                            {(() => {
+                                if (!formData.start_date || !formData.payment_day) return <p className="input" style={{ background: "var(--color-bg-subtle)", color: "var(--color-text-muted)" }}>—</p>;
+                                const [sYear, sMonth, sDay] = formData.start_date.split("-").map(Number);
+                                const fDay = Number(formData.payment_day);
+                                let fMonthIndex = sMonth - 1;
+                                if (fDay < sDay) fMonthIndex += 1;
+                                let firstDueObj = new Date(sYear, fMonthIndex, fDay);
+                                if (firstDueObj.getMonth() !== (fMonthIndex % 12)) firstDueObj = new Date(sYear, fMonthIndex + 1, 0);
+                                const pad = (n: number) => n.toString().padStart(2, "0");
+                                const preview = `${pad(firstDueObj.getDate())}/${pad(firstDueObj.getMonth() + 1)}/${firstDueObj.getFullYear()}`;
+                                return <p className="input" style={{ background: "var(--color-bg-subtle)", color: "var(--color-text-primary)", fontWeight: "var(--weight-semibold)" }}>{preview}</p>;
+                            })()}
                         </div>
                     </div>
 

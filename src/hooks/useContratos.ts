@@ -76,11 +76,11 @@ export function usePauseContrato() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const pause = async (id: string) => {
+    const pause = async (id: string, data?: { expected_return_date?: string }) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await contratosService.pause(id);
+            const response = await contratosService.pause(id, data);
             return response;
         } catch (err: any) {
             setError(err.message || "Erro ao pausar contrato");
