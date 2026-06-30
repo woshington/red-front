@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useUpdateContrato } from "../../hooks/useContratos";
-import type { PaymentMethod } from "../../types";
 
 interface ContratoEditModalProps {
     contrato: any;
@@ -13,10 +12,7 @@ export function ContratoEditModal({ contrato, onClose, onSaved }: ContratoEditMo
 
     const [formData, setFormData] = useState({
         total_value: String(contrato.total_value ?? ""),
-        payment_day: contrato.payment_day ?? 10,
         lessons_per_week: String(contrato.lessons_per_week ?? ""),
-        payment_method: (contrato.payment_method ?? "CASH") as PaymentMethod,
-        notes: contrato.notes ?? "",
         start_date: contrato.start_date ? contrato.start_date.split("T")[0] : "",
         end_date: contrato.end_date ? contrato.end_date.split("T")[0] : "",
     });
@@ -27,16 +23,18 @@ export function ContratoEditModal({ contrato, onClose, onSaved }: ContratoEditMo
         const e: Record<string, string> = {};
         if (!formData.total_value || Number(formData.total_value) <= 0)
             e.total_value = "Informe o valor total";
-        if (!formData.payment_day || formData.payment_day < 1 || formData.payment_day > 31)
-            e.payment_day = "Dia deve ser entre 1 e 31";
         if (!formData.start_date)
             e.start_date = "Data de início é obrigatória";
+        if (!formData.end_date)
+            e.end_date = "Data de fim é obrigatória";
+        if (formData.start_date && formData.end_date && formData.end_date <= formData.start_date)
+            e.end_date = "Data de fim deve ser após a data de início";
         return e;
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: name === "payment_day" ? Number(value) : value }));
+        setFormData(prev => ({ ...prev, [name]: value }));
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
     };
 
@@ -48,12 +46,9 @@ export function ContratoEditModal({ contrato, onClose, onSaved }: ContratoEditMo
         try {
             await update(contrato.id, {
                 total_value: Number(formData.total_value),
-                payment_day: formData.payment_day,
                 lessons_per_week: formData.lessons_per_week ? Number(formData.lessons_per_week) : undefined,
-                payment_method: formData.payment_method,
-                notes: formData.notes || null,
                 start_date: formData.start_date,
-                end_date: formData.end_date || undefined,
+                end_date: formData.end_date,
             });
             onSaved();
         } catch {
@@ -72,7 +67,7 @@ export function ContratoEditModal({ contrato, onClose, onSaved }: ContratoEditMo
         >
             <div
                 className="card"
-                style={{ width: "100%", maxWidth: "560px", maxHeight: "90vh", overflowY: "auto", zIndex: 1000 }}
+                style={{ width: "100%", maxWidth: "480px", maxHeight: "90vh", overflowY: "auto", zIndex: 1000 }}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--space-5)", paddingBottom: "var(--space-4)", borderBottom: "1px solid var(--color-border)" }}>
@@ -100,19 +95,6 @@ export function ContratoEditModal({ contrato, onClose, onSaved }: ContratoEditMo
                             {errors.total_value && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.total_value}</p>}
                         </div>
                         <div>
-                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Dia de Vencimento *</label>
-                            <input
-                                type="number" min="1" max="31" name="payment_day"
-                                className="input" value={formData.payment_day}
-                                onChange={handleChange} disabled={loading}
-                                style={errors.payment_day ? { borderColor: "var(--color-error)" } : {}}
-                            />
-                            {errors.payment_day && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.payment_day}</p>}
-                        </div>
-                    </div>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)", marginBottom: "var(--space-4)" }}>
-                        <div>
                             <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Aulas por Semana</label>
                             <input
                                 type="number" min="1" max="7" name="lessons_per_week"
@@ -120,18 +102,9 @@ export function ContratoEditModal({ contrato, onClose, onSaved }: ContratoEditMo
                                 onChange={handleChange} disabled={loading}
                             />
                         </div>
-                        <div>
-                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Método de Pagamento</label>
-                            <select name="payment_method" className="input" value={formData.payment_method} onChange={handleChange} disabled={loading}>
-                                <option value="CASH">Dinheiro</option>
-                                <option value="CREDIT_CARD">Cartão de Crédito</option>
-                                <option value="PIX">Pix</option>
-                                <option value="BOLETO">Boleto</option>
-                            </select>
-                        </div>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)", marginBottom: "var(--space-4)" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--space-4)", marginBottom: "var(--space-5)" }}>
                         <div>
                             <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Data de Início *</label>
                             <input
@@ -143,22 +116,15 @@ export function ContratoEditModal({ contrato, onClose, onSaved }: ContratoEditMo
                             {errors.start_date && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.start_date}</p>}
                         </div>
                         <div>
-                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Data de Fim</label>
+                            <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Data de Fim *</label>
                             <input
                                 type="date" name="end_date"
                                 className="input" value={formData.end_date}
                                 onChange={handleChange} disabled={loading}
+                                style={errors.end_date ? { borderColor: "var(--color-error)" } : {}}
                             />
+                            {errors.end_date && <p style={{ color: "var(--color-error)", fontSize: "var(--text-xs)", marginTop: "var(--space-1)" }}>{errors.end_date}</p>}
                         </div>
-                    </div>
-
-                    <div style={{ marginBottom: "var(--space-5)" }}>
-                        <label style={{ display: "block", marginBottom: "var(--space-2)", fontWeight: "var(--weight-medium)" }}>Observações</label>
-                        <textarea
-                            name="notes" className="input"
-                            value={formData.notes} onChange={handleChange}
-                            disabled={loading} rows={3}
-                        />
                     </div>
 
                     {errors.submit && (

@@ -9,7 +9,7 @@ export const contratosService = {
         api.post<Contrato>("/contracts", data),
 
     update: (id: string, data: Partial<Contrato>) =>
-        api.put<Contrato>(`/contracts/${id}`, data),
+        api.patch<Contrato>(`/contracts/${id}`, data),
 
     remove: (id: string) =>
         api.delete<Contrato>(`/contracts/${id}`),
