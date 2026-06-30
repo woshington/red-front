@@ -4,14 +4,25 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useDashboard } from '../hooks/useDashboard';
 
+function defaultPeriod() {
+    const today = new Date();
+    const prevMonth = today.getMonth() === 0
+        ? new Date(today.getFullYear() - 1, 11, 10)
+        : new Date(today.getFullYear(), today.getMonth() - 1, 10);
+    const currMonth10 = new Date(today.getFullYear(), today.getMonth(), 10);
+    const fmt = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return { start: fmt(prevMonth), end: fmt(currMonth10) };
+}
+
 export function Dashboard() {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const today = new Date();
-    const [month, setMonth] = useState(today.getMonth() + 1);
-    const [year, setYear] = useState(today.getFullYear());
+    const initial = defaultPeriod();
+    const [startDate, setStartDate] = useState(initial.start);
+    const [endDate, setEndDate] = useState(initial.end);
 
-    const { data, loading, error, reload } = useDashboard(month, year);
+    const { data, loading, error, reload } = useDashboard(startDate, endDate);
 
     if (user?.role === 'ACADEMIC') {
         return <Navigate to="/turmas" replace />;
@@ -40,8 +51,8 @@ export function Dashboard() {
         return `R$ ${Number(val || 0).toFixed(2).replace('.', ',')}`;
     };
 
-    const startOfMonth = `${year}-${String(month).padStart(2, '0')}-01`;
-    const endOfMonth = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
+    const startOfMonth = startDate;
+    const endOfMonth = endDate;
 
     const metrics = [
         {
@@ -112,17 +123,21 @@ export function Dashboard() {
                         Acompanhamento em tempo real de matrículas, cancelamentos e performance financeira
                     </p>
                 </div>
-                <div style={{ display: "flex", gap: "var(--space-2)" }}>
-                    <select className="input" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-                        {["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"].map((name, i) => (
-                            <option key={i + 1} value={i + 1}>{name}</option>
-                        ))}
-                    </select>
-                    <select className="input" value={year} onChange={(e) => setYear(Number(e.target.value))}>
-                        {Array.from({ length: 5 }, (_, i) => today.getFullYear() - 2 + i).map(y => (
-                            <option key={y} value={y}>{y}</option>
-                        ))}
-                    </select>
+                <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+                    <span style={{ fontSize: "13px", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>De</span>
+                    <input
+                        type="date"
+                        className="input"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                    />
+                    <span style={{ fontSize: "13px", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>até</span>
+                    <input
+                        type="date"
+                        className="input"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                    />
                 </div>
             </div>
 
