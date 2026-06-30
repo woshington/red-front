@@ -3,6 +3,7 @@ import { useContratos, useCreateContrato, usePauseContrato, useReactivateContrat
 import { installmentsService } from "../../services/installments";
 import { ContratoFormModal } from "../../components/contrato/contratoFormModal";
 import { ContratoDetailsModal } from "../../components/contrato/ContratoDetailsModal";
+import { ContratoEditModal } from "../../components/contrato/ContratoEditModal";
 
 export function ContratosPage() {
     const params = new URLSearchParams(window.location.search);
@@ -31,6 +32,7 @@ export function ContratosPage() {
 
     const [showModal, setShowModal] = useState(false);
     const [selectedContrato, setSelectedContrato] = useState<any | null>(null);
+    const [editingContrato, setEditingContrato] = useState<any | null>(null);
 
     // Pause modal state
     const [pauseTarget, setPauseTarget] = useState<any | null>(null);
@@ -239,6 +241,13 @@ export function ContratosPage() {
                                             </button>
                                             {contrato.status !== "CANCELED" && (
                                                 <>
+                                                    <button
+                                                        className="btn btn-ghost"
+                                                        style={{ fontSize: "var(--text-xs)", padding: "var(--space-1) var(--space-2)" }}
+                                                        onClick={() => setEditingContrato(contrato)}
+                                                    >
+                                                        Editar
+                                                    </button>
                                                     {contrato.status === "ACTIVE" ? (
                                                         <button
                                                             className="btn btn-ghost"
@@ -325,6 +334,14 @@ export function ContratosPage() {
                 <ContratoDetailsModal
                     contrato={selectedContrato}
                     onClose={() => setSelectedContrato(null)}
+                />
+            )}
+
+            {editingContrato && (
+                <ContratoEditModal
+                    contrato={editingContrato}
+                    onClose={() => setEditingContrato(null)}
+                    onSaved={() => { setEditingContrato(null); reload(); }}
                 />
             )}
 
