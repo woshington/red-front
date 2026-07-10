@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useInstallments, useMarkInstallmentPaid } from "../../hooks/useInstallments";
+import { useInstallments } from "../../hooks/useInstallments";
 
 export function PagamentosPage() {
     const params = new URLSearchParams(window.location.search);
@@ -12,7 +12,7 @@ export function PagamentosPage() {
     const [endDate, setEndDate] = useState(params.get("end_date") || "");
     const [statusFilter, setStatusFilter] = useState(params.get("status") || "");
 
-    const { data, loading, error, reload } = useInstallments({
+    const { data, loading, error } = useInstallments({
         skip,
         limit,
         start_date: startDate || undefined,
