@@ -6,37 +6,20 @@ export function PagamentosPage() {
     const [skip, setSkip] = useState(0);
     const [limit, setLimit] = useState(20);
     const [dateType, setDateType] = useState(params.get("date_type") || "due_date");
-    
+
     // Filtros
     const [startDate, setStartDate] = useState(params.get("start_date") || "");
     const [endDate, setEndDate] = useState(params.get("end_date") || "");
     const [statusFilter, setStatusFilter] = useState(params.get("status") || "");
 
-    const { data, loading, error, reload } = useInstallments({ 
-        skip, 
+    const { data, loading, error, reload } = useInstallments({
+        skip,
         limit,
         start_date: startDate || undefined,
         end_date: endDate || undefined,
         status: statusFilter || undefined,
         date_type: dateType || "due_date"
     });
-
-    const { markPaid, loading: markingPaid } = useMarkInstallmentPaid();
-
-    const handleMarkPaid = async (inst: any) => {
-        if (!window.confirm("Confirmar recebimento desta parcela?")) return;
-        try {
-            await markPaid(inst.id, {
-                paid_value: inst.value,
-                paid_at: new Date().toISOString(),
-                payment_method: "CASH"
-            });
-            reload();
-        } catch (err) {
-            console.error("Erro ao baixar parcela:", err);
-            alert("Erro ao baixar parcela.");
-        }
-    };
 
     return (
         <div>
@@ -57,9 +40,9 @@ export function PagamentosPage() {
             }}>
                 <div style={{ flex: 1, minWidth: "150px" }}>
                     <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)", display: "block" }}>Tipo de Data</label>
-                    <select 
-                        className="input" 
-                        value={dateType} 
+                    <select
+                        className="input"
+                        value={dateType}
                         onChange={(e) => setDateType(e.target.value)}
                     >
                         <option value="due_date">Vencimento</option>
@@ -68,27 +51,27 @@ export function PagamentosPage() {
                 </div>
                 <div style={{ flex: 1, minWidth: "150px" }}>
                     <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)", display: "block" }}>Data Inicial</label>
-                    <input 
+                    <input
                         type="date"
-                        className="input" 
-                        value={startDate} 
-                        onChange={(e) => setStartDate(e.target.value)} 
+                        className="input"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
                     />
                 </div>
                 <div style={{ flex: 1, minWidth: "150px" }}>
                     <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)", display: "block" }}>Data Final</label>
-                    <input 
+                    <input
                         type="date"
-                        className="input" 
-                        value={endDate} 
-                        onChange={(e) => setEndDate(e.target.value)} 
+                        className="input"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
                     />
                 </div>
                 <div style={{ flex: 1, minWidth: "150px" }}>
                     <label style={{ fontSize: "var(--text-xs)", color: "var(--color-text-muted)", marginBottom: "var(--space-1)", display: "block" }}>Status</label>
-                    <select 
-                        className="input" 
-                        value={statusFilter} 
+                    <select
+                        className="input"
+                        value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                     >
                         <option value="">Todos</option>
@@ -114,7 +97,7 @@ export function PagamentosPage() {
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                 <thead>
                                     <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                                        {["Aluno", "Parcela", "Vencimento", "Valor", "Status", "Ações"].map((h) => (
+                                        {["Aluno", "Parcela", "Vencimento", "Valor", "Status"].map((h) => (
                                             <th
                                                 key={h}
                                                 style={{
@@ -167,18 +150,6 @@ export function PagamentosPage() {
                                                     {inst.status}
                                                 </span>
                                             </td>
-                                            <td style={{ padding: "var(--space-3) var(--space-4)", textAlign: "right" }}>
-                                                {inst.status !== "PAID" && inst.status !== "CANCELED" && (
-                                                    <button 
-                                                        className="btn btn-primary" 
-                                                        style={{ fontSize: "var(--text-xs)", padding: "4px 8px" }}
-                                                        onClick={() => handleMarkPaid(inst)}
-                                                        disabled={markingPaid}
-                                                    >
-                                                        Baixar
-                                                    </button>
-                                                )}
-                                            </td>
                                         </tr>
                                     ))}
                                     {data.items.length === 0 && (
@@ -201,8 +172,8 @@ export function PagamentosPage() {
                             Mostrando {skip + 1} até {Math.min(skip + limit, data.total)} de {data.total} pagamentos
                         </div>
                         <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
-                            <select 
-                                className="input" 
+                            <select
+                                className="input"
                                 style={{ padding: "var(--space-1) var(--space-2)", fontSize: "var(--text-xs)", height: "auto" }}
                                 value={limit}
                                 onChange={(e) => {

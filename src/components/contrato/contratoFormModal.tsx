@@ -23,7 +23,6 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
         start_date: new Date().toISOString().split("T")[0],
         signed_at: new Date().toISOString().split("T")[0],
         payment_method: "CASH" as PaymentMethod,
-        generate_payments: false,
         notes: "",
     });
 
@@ -76,7 +75,7 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
         const totalMonths = Number(formData.installment_count) || 1;
 
         const [sYear, sMonth, sDay] = formData.start_date.split("-").map(Number);
-        
+
         const pad = (n: number) => n.toString().padStart(2, "0");
 
         // Calculate end_date
@@ -128,7 +127,7 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
 
         setFormData(prev => {
             const next = { ...prev, [name]: type === "checkbox" ? checked : value };
-            
+
             // Lógica para sincronizar valores
             if (name === 'total_value') {
                 const count = Number(next.installment_count) || 1;
@@ -177,7 +176,7 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
             <div
                 className="card"
                 style={{
-                    width: "100%", maxWidth: "600px", maxHeight: "90vh",
+                    width: "100%", maxWidth: "700px", maxHeight: "90vh",
                     overflowY: "auto", zIndex: 1000,
                 }}
                 onClick={(e) => e.stopPropagation()}
@@ -327,12 +326,7 @@ export function ContratoFormModal({ onClose, onSubmit, loading }: ContratoFormMo
                         <textarea name="notes" className="input" value={formData.notes} onChange={handleContractChange} disabled={loading} rows={2} />
                     </div>
 
-                    <div style={{ marginBottom: "var(--space-6)", display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
-                        <input type="checkbox" id="generate_payments" name="generate_payments" checked={formData.generate_payments} onChange={handleContractChange} disabled={loading} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
-                        <label htmlFor="generate_payments" style={{ cursor: "pointer", fontWeight: "var(--weight-medium)" }}>
-                            Gerar cobranças automaticamente agora
-                        </label>
-                    </div>
+
 
                     <div style={{ display: "flex", gap: "var(--space-3)", justifyContent: "flex-end" }}>
                         <button type="button" className="btn btn-ghost" onClick={onClose} disabled={loading}>Cancelar</button>

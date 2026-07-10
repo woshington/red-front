@@ -95,7 +95,6 @@ export interface Contrato {
     total_months: number | null;
     signed_at: string | null;
     payment_method: PaymentMethod;
-    generate_payments: boolean;
     notes: string | null;
     is_active: boolean;
     created_at: string;
